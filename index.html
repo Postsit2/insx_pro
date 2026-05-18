@@ -1,0 +1,3790 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🗺️ ระบบปักหมุด - จัดการจุดรับสาย</title>
+
+    <!-- Google Fonts - Mitr -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <style>
+        :root {
+            --primary: #92C7CF;
+            --secondary: #AAD7D9;
+            --light: #FBF9F1;
+            --gray: #E5E1DA;
+            --dark: #5a6c7d;
+            --text: #3d4f5f;
+            --success: #6db892;
+            --warning: #e8b86d;
+            --danger: #e07b7b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Mitr', sans-serif;
+            background: var(--light);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 15px rgba(146, 199, 207, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-title .emoji {
+            font-size: 1.5rem;
+        }
+
+        .header-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            background: #fff;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 120px;
+        }
+
+        /* ===== FORM CARD ===== */
+        .form-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(146, 199, 207, 0.15);
+            border: 1px solid var(--gray);
+        }
+
+        .form-card h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .form-group label .required {
+            color: var(--danger);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--gray);
+            border-radius: 10px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text);
+            background: var(--light);
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(146, 199, 207, 0.25);
+            background: #fff;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Autocomplete Suggestions */
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 2px solid var(--primary);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 999;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .suggestions-list.active {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--gray);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover,
+        .suggestion-item.selected {
+            background: var(--secondary);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(146, 199, 207, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(146, 199, 207, 0.5);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #6db892, #7ec8a0);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(109, 184, 146, 0.4);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #e8b86d, #f0c878);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e07b7b, #e88888);
+            color: #fff;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== DATA LIST ===== */
+        .data-section {
+            margin-top: 8px;
+        }
+
+        .data-section h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(146, 199, 207, 0.12);
+            border: 1px solid var(--gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .data-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(146, 199, 207, 0.2);
+            border-color: var(--primary);
+        }
+
+        .data-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .data-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .data-card-subtitle {
+            font-size: 0.82rem;
+            color: #888;
+        }
+
+        .status-badge {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-done {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .data-card-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            font-size: 0.82rem;
+        }
+
+        .data-card-body .item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .data-card-body .item .icon {
+            font-size: 0.9rem;
+        }
+
+        .data-card-body .item.full {
+            grid-column: 1 / -1;
+        }
+
+        .data-card-coords {
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: var(--light);
+            border-radius: 8px;
+            font-size: 0.78rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ===== FLOATING MAP ===== */
+        .floating-map {
+            position: fixed;
+            bottom: 90px;
+            right: 16px;
+            width: 180px;
+            height: 180px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            z-index: 900;
+            border: 3px solid #fff;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .floating-map:hover {
+            transform: scale(1.05);
+        }
+
+        .floating-map.expanded {
+            width: calc(100% - 32px);
+            height: 70vh;
+            max-width: 700px;
+            bottom: 50px;
+            right: 16px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .floating-map #miniMap {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-toggle-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            z-index: 901;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .map-toggle-btn:hover {
+            background: var(--secondary);
+            transform: scale(1.15);
+        }
+
+        /* ===== DETAIL POPUP (MODAL) ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            width: 100%;
+            max-width: 600px;
+            max-height: 85vh;
+            border-radius: 20px;
+            overflow-y: auto;
+            padding: 24px;
+            animation: modalIn 0.25s ease;
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--gray);
+        }
+
+        .modal-header h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: var(--gray);
+            color: var(--dark);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .detail-item {
+            padding: 10px 14px;
+            background: var(--light);
+            border-radius: 10px;
+        }
+
+        .detail-item.full {
+            grid-column: 1 / -1;
+        }
+
+        .detail-item .label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        .detail-item .value {
+            font-size: 0.92rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .distance-display {
+            text-align: center;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            margin-bottom: 16px;
+            color: #fff;
+        }
+
+        .distance-display .number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .distance-display .unit {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .navigate-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #6db892, #7ec8a0);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 3px 10px rgba(109, 184, 146, 0.4);
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        .navigate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(109, 184, 146, 0.5);
+        }
+
+        .modal-map {
+            width: 100%;
+            height: 200px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border: 2px solid var(--gray);
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            padding: 16px;
+            font-size: 0.82rem;
+            color: #999;
+            background: var(--light);
+            border-top: 1px solid var(--gray);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        /* ===== IMAGE DISPLAY ===== */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .image-grid img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid var(--gray);
+            transition: all 0.2s;
+        }
+
+        .image-grid img:hover {
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* ===== IMAGE UPLOAD ===== */
+        .image-upload-area {
+            border: 2px dashed var(--gray);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--light);
+        }
+
+        .image-upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(146, 199, 207, 0.1);
+        }
+
+        .image-upload-area .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .image-upload-area p {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .image-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .image-preview-item {
+            position: relative;
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--gray);
+        }
+
+        .image-preview-item .remove-img {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ===== IMAGE MODAL ===== */
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal.active {
+            display: flex;
+        }
+
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* ===== LOADING ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--gray);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== FILTER BAR ===== */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar input,
+        .filter-bar select {
+            padding: 8px 12px;
+            border: 2px solid var(--gray);
+            border-radius: 10px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            background: #fff;
+        }
+
+        .filter-bar input:focus,
+        .filter-bar select:focus {
+            border-color: var(--primary);
+        }
+
+        .filter-bar input[type="text"] {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .filter-bar input[type="date"] {
+            min-width: 140px;
+            padding: 8px 12px;
+            border: 2px solid var(--gray);
+            border-radius: 10px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.85rem;
+            outline: none;
+            background: #fff;
+            color: var(--text);
+        }
+
+        .filter-bar input[type="date"]:focus {
+            border-color: var(--primary);
+        }
+
+        .view-toggle-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--gray);
+            border-radius: 10px;
+            background: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .view-toggle-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .view-toggle-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(146, 199, 207, 0.4);
+        }
+
+        /* ===== TABLE VIEW ===== */
+        .data-table-wrapper {
+            overflow-x: auto;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(146, 199, 207, 0.12);
+            border: 1px solid var(--gray);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            background: #fff;
+        }
+
+        .data-table thead {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .data-table thead th {
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .data-table thead th:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .data-table thead th .sort-icon {
+            margin-left: 4px;
+            opacity: 0.6;
+            font-size: 0.7rem;
+        }
+
+        .data-table thead th.sorted .sort-icon {
+            opacity: 1;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--gray);
+            transition: background 0.2s;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--light);
+        }
+
+        .data-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .data-table tbody td {
+            padding: 10px 10px;
+            vertical-align: middle;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .data-table tbody td .table-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .data-table tbody td .table-status:hover {
+            transform: scale(1.05);
+        }
+
+        .data-table tbody td .table-status.status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .data-table tbody td .table-status.status-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .data-table tbody td .table-status.status-done {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .data-table tbody td .table-weather-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--gray);
+            background: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .data-table tbody td .table-weather-btn:hover {
+            border-color: var(--primary);
+            background: var(--light);
+            transform: scale(1.1);
+        }
+
+        .data-table tbody td .table-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 2px solid var(--gray);
+            background: #fff;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            margin-right: 4px;
+        }
+
+        .data-table tbody td .table-action-btn:hover {
+            border-color: var(--primary);
+            background: var(--light);
+        }
+
+        .data-table tbody td .table-coords {
+            font-size: 0.72rem;
+            color: #888;
+            font-family: monospace;
+        }
+
+        .table-count-info {
+            padding: 8px 12px;
+            background: var(--light);
+            font-size: 0.78rem;
+            color: #888;
+            border-top: 1px solid var(--gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .data-card-body {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-title h1 {
+                font-size: 1.05rem;
+            }
+
+            .container {
+                padding: 10px;
+                padding-bottom: 120px;
+            }
+
+            .floating-map {
+                width: 140px;
+                height: 140px;
+                bottom: 70px;
+                right: 10px;
+            }
+
+            .floating-map.expanded {
+                width: calc(100% - 20px);
+                height: 65vh;
+                right: 10px;
+                bottom: 60px;
+            }
+
+            .filter-bar {
+                flex-wrap: wrap;
+            }
+
+            .filter-bar input[type="text"] {
+                flex: 1 1 100%;
+            }
+
+            .filter-bar input[type="date"],
+            .filter-bar select {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 0;
+            }
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #aaa;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        /* ===== COORDINATE INPUT ===== */
+        .coord-input-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .coord-input-group input {
+            flex: 1;
+        }
+
+        .coord-btn {
+            padding: 10px 14px;
+            background: var(--secondary);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .coord-btn:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* ===== WEATHER POPUP ===== */
+        .weather-popup {
+            font-family: 'Mitr', sans-serif;
+            min-width: 220px;
+        }
+
+        .weather-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--gray);
+            margin-bottom: 10px;
+        }
+
+        .weather-popup-icon {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+
+        .weather-popup-temp {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1;
+        }
+
+        .weather-popup-temp .unit {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #888;
+        }
+
+        .weather-popup-desc {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .weather-popup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .weather-popup-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            background: var(--light);
+            border-radius: 8px;
+            font-size: 0.78rem;
+        }
+
+        .weather-popup-item .w-icon {
+            font-size: 1rem;
+        }
+
+        .weather-popup-item .w-label {
+            color: #888;
+            font-size: 0.7rem;
+        }
+
+        .weather-popup-item .w-value {
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        .weather-popup-forecast {
+            border-top: 2px solid var(--gray);
+            padding-top: 10px;
+        }
+
+        .weather-popup-forecast h4 {
+            font-size: 0.82rem;
+            color: var(--dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .forecast-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            font-size: 0.78rem;
+            border-bottom: 1px solid var(--gray);
+        }
+
+        .forecast-row:last-child {
+            border-bottom: none;
+        }
+
+        .forecast-date {
+            font-weight: 500;
+            color: var(--dark);
+            min-width: 55px;
+        }
+
+        .forecast-icon {
+            font-size: 1.1rem;
+        }
+
+        .forecast-temp {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .forecast-temp .low {
+            color: #999;
+            font-weight: 300;
+        }
+
+        .forecast-rain {
+            color: #5b9bd5;
+            font-size: 0.72rem;
+        }
+
+        .weather-popup-loading {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .weather-popup-loading .spinner {
+            width: 24px;
+            height: 24px;
+            border-width: 3px;
+            margin: 0 auto 8px;
+        }
+
+        .weather-popup-error {
+            text-align: center;
+            padding: 16px;
+            color: var(--danger);
+            font-size: 0.85rem;
+        }
+
+        .weather-popup-footer {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--gray);
+            font-size: 0.68rem;
+            color: #aaa;
+            text-align: right;
+        }
+
+        /* Weather trigger button on cards */
+        .weather-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--gray);
+            background: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .weather-btn:hover {
+            border-color: var(--primary);
+            background: var(--light);
+            transform: scale(1.1);
+        }
+
+        .map-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--gray);
+            background: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .map-btn:hover {
+            border-color: var(--primary);
+            background: var(--light);
+            transform: scale(1.1);
+        }
+
+        /* ===== LEAFLET POPUP CUSTOM ===== */
+        .weather-leaflet-popup .leaflet-popup-content-wrapper {
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border: 2px solid var(--gray);
+            padding: 0;
+        }
+
+        .weather-leaflet-popup .leaflet-popup-content {
+            margin: 14px 16px;
+            font-family: 'Mitr', sans-serif;
+        }
+
+        .weather-leaflet-popup .leaflet-popup-tip {
+            border: 2px solid var(--gray);
+        }
+
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            margin-bottom: 8px;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeInRight 0.3s ease;
+        }
+
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.info { border-left: 4px solid var(--primary); }
+
+        /* ===== FAB BUTTON ===== */
+        .fab-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(146, 199, 207, 0.5);
+            z-index: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .fab-btn:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 6px 28px rgba(146, 199, 207, 0.6);
+        }
+
+        .fab-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        /* ===== ADD FORM MODAL ===== */
+        #addModal .modal-content {
+            padding: 20px 24px 24px;
+        }
+
+        #addModal .form-grid {
+            max-height: calc(90vh - 140px);
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        #addModal .form-grid::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #addModal .form-grid::-webkit-scrollbar-thumb {
+            background: var(--gray);
+            border-radius: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .fab-btn {
+                bottom: 16px;
+                width: 54px;
+                height: 54px;
+                font-size: 1.5rem;
+            }
+        }
+        /* ===== VIEW SECTIONS ===== */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* ===== LOGIN VIEW ===== */
+        .login-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #92C7CF 0%, #AAD7D9 50%, #E5E1DA 100%);
+            padding: 20px;
+            z-index: 9000;
+        }
+
+        .login-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 0;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 8px 40px rgba(146, 199, 207, 0.35);
+            overflow: hidden;
+        }
+
+        .login-card .auth-tab {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            background: none;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary);
+            cursor: pointer;
+            border-bottom: 3px solid var(--primary);
+            transition: all 0.2s;
+        }
+
+        .login-card .auth-tab.inactive {
+            color: #999;
+            border-bottom: 3px solid transparent;
+            font-weight: 400;
+        }
+
+        .login-header {
+            text-align: center;
+            padding: 28px 24px 16px;
+        }
+
+        .login-header .login-logo {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+
+        .login-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .login-header p {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        /* ===== DASHBOARD VIEW ===== */
+        .dashboard-view {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            padding-bottom: 40px;
+        }
+
+        .dashboard-welcome {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(146, 199, 207, 0.35);
+        }
+
+        .dashboard-welcome h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .dashboard-welcome p {
+            font-size: 0.88rem;
+            opacity: 0.9;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(146, 199, 207, 0.12);
+            border: 1px solid var(--gray);
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(146, 199, 207, 0.2);
+        }
+
+        .stat-card .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1.1;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.72rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .stat-card.stat-total .stat-number { color: var(--dark); }
+        .stat-card.stat-pending .stat-number { color: #c9a84c; }
+        .stat-card.stat-progress .stat-number { color: #5b9bd5; }
+        .stat-card.stat-done .stat-number { color: var(--success); }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .dashboard-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 28px 24px;
+            box-shadow: 0 2px 12px rgba(146, 199, 207, 0.12);
+            border: 2px solid var(--gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 28px rgba(146, 199, 207, 0.25);
+            border-color: var(--primary);
+        }
+
+        .dashboard-card:hover::before {
+            opacity: 1;
+        }
+
+        .dashboard-card .card-icon {
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+        }
+
+        .dashboard-card .card-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 6px;
+        }
+
+        .dashboard-card .card-desc {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* ===== ADD LINE VIEW ===== */
+        .addline-view {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 16px;
+            padding-bottom: 40px;
+        }
+
+        .addline-form-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 2px 12px rgba(146, 199, 207, 0.15);
+            border: 1px solid var(--gray);
+        }
+
+        /* ===== BACK BUTTON ===== */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: #fff;
+            border: 2px solid var(--gray);
+            border-radius: 10px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.85rem;
+            color: var(--dark);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .back-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ===== HEADER NAV (logged in) ===== */
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-nav-btn {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 10px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.8rem;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .header-nav-btn:hover {
+            background: rgba(255,255,255,0.35);
+            border-color: #fff;
+        }
+
+        .header-user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-user-name {
+            color: #fff;
+            font-size: 0.82rem;
+        }
+
+        .header-logout-btn {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-color: rgba(255,255,255,0.6);
+            color: #fff;
+            background: transparent;
+            border: 2px solid;
+            border-radius: 8px;
+            font-family: 'Mitr', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-logout-btn:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: #fff;
+        }
+
+        @media (max-width: 600px) {
+            .dashboard-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .header-nav-btn {
+                padding: 5px 8px;
+                font-size: 0.72rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header" id="mainHeader">
+        <div class="header-title">
+            <span class="emoji">🗺️</span>
+            <h1>ระบบปักหมุด - จัดการจุดรับสาย</h1>
+        </div>
+        <div class="header-nav" id="headerNav">
+            <!-- Dynamic content based on auth state -->
+        </div>
+    </header>
+
+    <!-- MAIN VIEW (Data Management) -->
+    <div id="mainView" class="view-section">
+        <!-- LOADING -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner"></div>
+            <span style="font-size:0.9rem; color:var(--dark);">กำลังโหลดข้อมูล...</span>
+        </div>
+
+        <!-- TOAST CONTAINER -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Back button + container -->
+        <div class="container" style="padding-top:8px;">
+            <button class="back-btn" id="mainBackBtn">← กลับหน้าหลัก</button>
+
+            <!-- DATA LIST -->
+            <div class="data-section" style="margin-top:0;">
+                <h2>📋 รายการจุดทั้งหมด</h2>
+
+                <div class="filter-bar">
+                    <input type="text" id="searchInput" placeholder="🔍 ค้นหา...">
+                    <input type="date" id="filterDate" title="กรองตามวันที่">
+                    <select id="filterStatus">
+                        <option value="">ทุกสถานะ</option>
+                        <option value="รอดำเนินการ">⏳ รอดำเนินการ</option>
+                        <option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
+                        <option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
+                    </select>
+                    <button class="view-toggle-btn active" id="viewCardBtn" title="แสดงแบบการ์ด">📇</button>
+                    <button class="view-toggle-btn" id="viewTableBtn" title="แสดงแบบตาราง">📊</button>
+                </div>
+
+                <div id="dataList"></div>
+            </div>
+        </div>
+
+        <!-- FLOATING MAP -->
+        <div class="floating-map" id="floatingMap">
+            <button class="map-toggle-btn" id="mapToggleBtn">⛶</button>
+            <div id="miniMap"></div>
+        </div>
+
+        <!-- DETAIL MODAL -->
+        <div class="modal-overlay" id="detailModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📍 รายละเอียดจุดรับสาย</h3>
+                    <button class="modal-close" id="modalClose">✕</button>
+                </div>
+
+                <div id="modalBody">
+                    <!-- Distance -->
+                    <div class="distance-display" id="distanceDisplay">
+                        <div class="number" id="distanceValue">--</div>
+                        <div class="unit">เมตรจากตำแหน่งปัจจุบัน</div>
+                    </div>
+
+                    <!-- Navigate Button -->
+                    <button class="navigate-btn" id="navigateBtn">
+                        🧭 นำทางไปยังจุดหมาย
+                    </button>
+
+                    <!-- Modal Map -->
+                    <div class="modal-map" id="modalMap"></div>
+
+                    <!-- Detail Grid -->
+                    <div class="detail-grid" id="detailGrid"></div>
+
+                    <!-- Images -->
+                    <div id="modalImages"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- IMAGE MODAL -->
+        <div class="image-modal" id="imageModal">
+            <button class="image-modal-close" id="imageModalClose">✕</button>
+            <img src="" alt="Preview" id="imageModalImg">
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            © 2025 อ.เอ เออเอ — ระบบปักหมุดจัดการจุดรับสาย
+        </footer>
+    </div>
+
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="view-section login-view">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">🗺️</div>
+                <h2>ระบบปักหมุด - จัดการจุดรับสาย</h2>
+                <p>กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
+            </div>
+            <div style="display:flex; border-bottom:2px solid var(--gray);">
+                <button class="auth-tab" id="tabLogin">🔑 เข้าสู่ระบบ</button>
+                <button class="auth-tab inactive" id="tabRegister">📝 สมัครสมาชิก</button>
+            </div>
+            <div id="loginForm" style="padding:24px;">
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>ชื่อผู้ใช้</label>
+                    <input type="text" id="loginUsername" placeholder="กรอกชื่อผู้ใช้..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label>รหัสผ่าน</label>
+                    <input type="password" id="loginPassword" placeholder="กรอกรหัสผ่าน..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <button class="btn btn-primary" style="width:100%; justify-content:center; padding:12px;" id="btnLoginSubmit">🔑 เข้าสู่ระบบ</button>
+                <div id="loginError" style="color:var(--danger); font-size:0.82rem; margin-top:10px; text-align:center; display:none;"></div>
+            </div>
+            <div id="registerForm" style="padding:24px; display:none;">
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>ชื่อ-นามสกุล</label>
+                    <input type="text" id="regFullname" placeholder="กรอกชื่อ-นามสกุล..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>ชื่อผู้ใช้</label>
+                    <input type="text" id="regUsername" placeholder="ตั้งชื่อผู้ใช้..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label>รหัสผ่าน</label>
+                    <input type="password" id="regPassword" placeholder="ตั้งรหัสผ่าน (อย่างน้อย 4 ตัว)..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <button class="btn btn-success" style="width:100%; justify-content:center; padding:12px;" id="btnRegisterSubmit">📝 สมัครสมาชิก</button>
+                <div id="regError" style="color:var(--danger); font-size:0.82rem; margin-top:10px; text-align:center; display:none;"></div>
+                <div id="regSuccess" style="color:var(--success); font-size:0.82rem; margin-top:10px; text-align:center; display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboardView" class="view-section dashboard-view">
+        <div class="dashboard-welcome">
+            <h2 id="dashWelcome">สวัสดี 👋</h2>
+            <p>เลือกเมนูด้านล่างเพื่อเริ่มต้นใช้งาน</p>
+        </div>
+        <div class="dashboard-stats" id="dashboardStats">
+            <div class="stat-card stat-total">
+                <div class="stat-number" id="statTotal">0</div>
+                <div class="stat-label">ทั้งหมด</div>
+            </div>
+            <div class="stat-card stat-pending">
+                <div class="stat-number" id="statPending">0</div>
+                <div class="stat-label">⏳ รอดำเนินการ</div>
+            </div>
+            <div class="stat-card stat-progress">
+                <div class="stat-number" id="statProgress">0</div>
+                <div class="stat-label">🔄 กำลังดำเนินการ</div>
+            </div>
+            <div class="stat-card stat-done">
+                <div class="stat-number" id="statDone">0</div>
+                <div class="stat-label">✅ เสร็จสิ้น</div>
+            </div>
+        </div>
+        <div class="dashboard-cards">
+            <div class="dashboard-card" id="dashCardMain">
+                <div class="card-icon">📍</div>
+                <div class="card-title">บันทึกข้อมูลจุดรับสาย</div>
+                <div class="card-desc">ดูรายการจุดรับสายทั้งหมด ค้นหา กรอง และจัดการสถานะ</div>
+            </div>
+            <div class="dashboard-card" id="dashCardAddLine">
+                <div class="card-icon">🔌</div>
+                <div class="card-title">เพิ่มสายจากผู้ใช้งาน</div>
+                <div class="card-desc">เพิ่มข้อมูลสายใหม่เข้าสู่ระบบ</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD LINE VIEW -->
+    <div id="addLineView" class="view-section addline-view">
+        <button class="back-btn" id="addLineBackBtn">← กลับหน้าหลัก</button>
+        <div class="addline-form-card">
+            <h2 style="font-size:1.1rem; font-weight:600; color:var(--dark); margin-bottom:16px;">🔌 เพิ่มสายจากผู้ใช้</h2>
+            <form id="addLineFormView">
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>ชื่อสาย <span class="required">*</span></label>
+                    <input type="text" id="lineNameView" placeholder="เช่น สาย 1 - หน่วย ก" required style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>หมวด</label>
+                    <input type="text" id="lineCategoryView" placeholder="เช่น A, B, C" style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>ตำบล</label>
+                    <input type="text" id="lineTambonView" placeholder="ระบุตำบล..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>หมู่บ้าน</label>
+                    <input type="text" id="lineVillageView" placeholder="ระบุหมู่บ้าน..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label>พิกัด</label>
+                    <input type="text" id="lineCoordsView" placeholder="เช่น 13.7563, 100.5018" style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label>หมายเหตุ</label>
+                    <textarea id="lineNoteView" placeholder="ระบุหมายเหตุ..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none; min-height:60px; resize:vertical;"></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">💾 เพิ่มสาย</button>
+                    <button type="button" class="btn btn-outline" id="btnClearAddLineView">🗑️ ล้างฟอร์ม</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuidv4.min.js"></script>
+
+    <script>
+
+        // ===== CONFIG =====
+        const API_URL = 'https://postsit.byethost22.com/api.php'; // MyAdmin API
+        const AUTH_URL = API_URL.replace('api.php', 'auth.php');
+        // Google Sheet — ใช้เฉพาะสำหรับ autocomplete suggestions (tab DATA)
+        const SHEET_ID = '1ZQla4tHCc9VXUswa3Jd-Rg4WJ4qE6S5rz8Aral61H90';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxlBqUNGdPjLut9Ilm5ugkSou8U9J6H6V2tfC4qSUTe9wXdzwr6tx_-iJB-BCWrYqTmA/exec';
+
+        // ===== STATE =====
+        let allData = [];
+        let lineUnitSuggestions = [];
+        let uploadedImages = [];
+        let miniMap = null;
+        let modalMap = null;
+        let miniMarker = null;
+        let modalMarker = null;
+        let currentDetailItem = null;
+        let userLocation = null;
+        let appView = 'login'; // login | dashboard | main | addLine
+        let currentUser = null;
+        let dataLoaded = false;
+
+        // ===== VIEW ROUTING =====
+        function showView(view) {
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            // Show target view
+            const target = document.getElementById(view + 'View');
+            if (target) target.classList.add('active');
+            appView = view;
+            window.scrollTo(0, 0);
+            // Hide header on login view, show on others
+            const header = document.getElementById('mainHeader');
+            if (header) {
+                header.style.display = (view === 'login') ? 'none' : 'flex';
+            }
+            updateHeaderNav();
+            if (view === 'dashboard') {
+                updateDashboardStats();
+            }
+        }
+
+        function updateHeaderNav() {
+            const nav = document.getElementById('headerNav');
+            const token = localStorage.getItem('auth_token');
+            const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+            if (token && user.fullname) {
+                currentUser = user;
+                let navHtml = '';
+                if (appView !== 'dashboard') {
+                    navHtml += `<button class="header-nav-btn" onclick="showView('dashboard')">🏠 หน้าหลัก</button>`;
+                }
+                if (appView !== 'main') {
+                    navHtml += `<button class="header-nav-btn" onclick="showView('main')">📍 จุดรับสาย</button>`;
+                }
+                if (appView !== 'addLine') {
+                    navHtml += `<button class="header-nav-btn" onclick="showView('addLine')">🔌 เพิ่มสาย</button>`;
+                }
+                navHtml += `<div class="header-user-info">`;
+                navHtml += `<span class="header-user-name">👤 ${user.fullname}</span>`;
+                navHtml += `<button class="header-logout-btn" onclick="handleLogout()">ออก</button>`;
+                navHtml += `</div>`;
+                nav.innerHTML = navHtml;
+            } else {
+                currentUser = null;
+                nav.innerHTML = '';
+            }
+        }
+
+        function updateDashboardStats() {
+            const total = allData.length;
+            const pending = allData.filter(d => d.STATUS === 'รอดำเนินการ').length;
+            const progress = allData.filter(d => d.STATUS === 'กำลังดำเนินการ').length;
+            const done = allData.filter(d => d.STATUS === 'เสร็จสิ้น').length;
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statProgress').textContent = progress;
+            document.getElementById('statDone').textContent = done;
+        }
+
+        // ===== AUTH FUNCTIONS =====
+
+        function switchAuthTab(tab) {
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            if (tab === 'login') {
+                tabLogin.classList.remove('inactive');
+                tabRegister.classList.add('inactive');
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                tabRegister.classList.remove('inactive');
+                tabLogin.classList.add('inactive');
+                registerForm.style.display = 'block';
+                loginForm.style.display = 'none';
+            }
+        }
+
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const errEl = document.getElementById('loginError');
+            errEl.style.display = 'none';
+            if (!username || !password) { errEl.textContent = 'กรุณากรอกข้อมูลให้ครบ'; errEl.style.display = 'block'; return; }
+            try {
+                const loginUrl = AUTH_URL + '?action=login';
+                const resp = await fetch(loginUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+                const text = await resp.text();
+                const result = JSON.parse(text);
+                if (!result.success) { errEl.textContent = result.error; errEl.style.display = 'block'; return; }
+                localStorage.setItem('auth_token', result.token);
+                localStorage.setItem('auth_user', JSON.stringify(result.user));
+                currentUser = result.user;
+                await loadData();
+                showView('main');
+                Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ!', text: `สวัสดี ${result.user.fullname}`, confirmButtonColor: '#92C7CF', timer: 2000 });
+            } catch (e) { errEl.textContent = 'เกิดข้อผิดพลาด: ' + e.message; errEl.style.display = 'block'; }
+        }
+
+        async function handleRegister() {
+            const fullname = document.getElementById('regFullname').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const errEl = document.getElementById('regError');
+            const sucEl = document.getElementById('regSuccess');
+            errEl.style.display = 'none'; sucEl.style.display = 'none';
+            if (!fullname || !username || !password) { errEl.textContent = 'กรุณากรอกข้อมูลให้ครบ'; errEl.style.display = 'block'; return; }
+            try {
+                const resp = await fetch(AUTH_URL + '?action=register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullname, username, password }) });
+                const result = await resp.json();
+                if (!result.success) { errEl.textContent = result.error; errEl.style.display = 'block'; return; }
+                sucEl.textContent = '✅ สมัครสำเร็จ! กรุณาเข้าสู่ระบบ';
+                sucEl.style.display = 'block';
+                document.getElementById('regFullname').value = '';
+                document.getElementById('regUsername').value = '';
+                document.getElementById('regPassword').value = '';
+                setTimeout(() => switchAuthTab('login'), 1500);
+            } catch (e) { errEl.textContent = 'เกิดข้อผิดพลาด: ' + e.message; errEl.style.display = 'block'; }
+        }
+
+        async function handleLogout() {
+            const token = localStorage.getItem('auth_token');
+            const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+            if (token && user.id) {
+                try {
+                    await fetch(AUTH_URL + '?action=logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: user.id }) });
+                } catch (e) { }
+            }
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
+            currentUser = null;
+            dataLoaded = false;
+            allData = [];
+            showView('login');
+            Swal.fire({ icon: 'info', title: 'ออกจากระบบแล้ว', confirmButtonColor: '#92C7CF', timer: 1500 });
+        }
+
+        // Auto-check session on load
+        async function checkSession() {
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                showView('login');
+                return;
+            }
+            try {
+                const resp = await fetch(AUTH_URL + '?action=checkSession&token=' + token);
+                const result = await resp.json();
+                if (result.success) {
+                    localStorage.setItem('auth_user', JSON.stringify(result.user));
+                    currentUser = result.user;
+                    await loadData();
+                    document.getElementById('dashWelcome').textContent = `สวัสดี, ${result.user.fullname} 👋`;
+                    showView('main');
+                } else {
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('auth_user');
+                    showView('login');
+                }
+            } catch (e) {
+                showView('login');
+            }
+        }
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', function() {
+            initDate();
+            initMaps();
+            initEventListeners();
+            getUserLocation();
+            checkSession();
+        });
+
+        function initDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('inputDate').value = today;
+        }
+
+        function getUserLocation() {
+            if (!navigator.geolocation) {
+                console.log('Geolocation not supported');
+                return;
+            }
+            // ตรวจสอบ HTTPS — Geolocation ทำงานได้เฉพาะ secure context (HTTPS / localhost)
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                console.warn('Geolocation requires HTTPS. Current protocol:', location.protocol);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ต้องใช้ HTTPS',
+                    text: 'ระบบรับตำแหน่ง GPS ต้องเปิดเว็บผ่าน HTTPS เท่านั้น กรุณาเปลี่ยน URL เป็น https://',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    userLocation = {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude
+                    };
+                    console.log('User location acquired:', userLocation);
+                    updateUserLocationOnMaps();
+                },
+                err => {
+                    console.log('Geolocation error:', err.message);
+                    if (err.code === 1) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'ไม่ได้รับอนุญาต',
+                            text: 'กรุณากด "อนุญาต" เมื่อเบราว์เซอร์ถามเกี่ยวกับตำแหน่ง',
+                            confirmButtonText: 'ตกลง'
+                        });
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        let miniUserMarker = null;
+
+        function updateUserLocationOnMaps() {
+            if (!userLocation) return;
+            const userIcon = L.divIcon({
+                html: '<div style="font-size:1.3rem; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));">🧍</div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+                className: ''
+            });
+
+            // Update mini map
+            if (miniMap) {
+                if (miniUserMarker) miniMap.removeLayer(miniUserMarker);
+                miniUserMarker = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+                    .addTo(miniMap)
+                    .bindPopup('ตำแหน่งของคุณ');
+            }
+
+            // Update modal map (if open)
+            if (modalMap) {
+                // ลบ user marker เก่าออก (ค้นหาจาก popup text)
+                modalMap.eachLayer(layer => {
+                    if (layer instanceof L.Marker && layer !== modalMarker && layer !== miniMarker) {
+                        const popup = layer.getPopup();
+                        if (popup && popup.getContent && popup.getContent().includes('ตำแหน่งของคุณ')) {
+                            modalMap.removeLayer(layer);
+                        }
+                    }
+                });
+                L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+                    .addTo(modalMap)
+                    .bindPopup('ตำแหน่งของคุณ');
+            }
+        }
+
+        // ===== MAPS =====
+        function initMaps() {
+            // Mini Map
+            miniMap = L.map('miniMap', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([13.7563, 100.5018], 10);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19
+            }).addTo(miniMap);
+
+            // Click to add marker on mini map
+            miniMap.on('click', function(e) {
+                const lat = e.latlng.lat.toFixed(6);
+                const lng = e.latlng.lng.toFixed(6);
+                document.getElementById('inputCoords').value = `${lat}, ${lng}`;
+
+                if (miniMarker) miniMap.removeLayer(miniMarker);
+                miniMarker = L.marker([lat, lng]).addTo(miniMap);
+                showToast('📍 รับพิกัดจากแผนที่แล้ว', 'success');
+            });
+
+            // แสดงตำแหน่งผู้ใช้ถ้ามีแล้ว
+            if (userLocation) {
+                updateUserLocationOnMaps();
+            }
+        }
+
+        function initModalMap(lat, lng) {
+            if (modalMap) {
+                modalMap.remove();
+                modalMap = null;
+            }
+
+            setTimeout(() => {
+                modalMap = L.map('modalMap', {
+                    zoomControl: true,
+                    attributionControl: false
+                }).setView([lat, lng], 15);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19
+                }).addTo(modalMap);
+
+                // Custom pin icon
+                const pinIcon = L.divIcon({
+                    html: '<div style="font-size:2rem; text-shadow:0 2px 4px rgba(0,0,0,0.3);">📍</div>',
+                    iconSize: [30, 40],
+                    iconAnchor: [15, 40],
+                    className: ''
+                });
+
+                modalMarker = L.marker([lat, lng], { icon: pinIcon }).addTo(modalMap);
+
+                // User location marker
+                if (userLocation) {
+                    const userIcon = L.divIcon({
+                        html: '<div style="font-size:1.2rem;">🧍</div>',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10],
+                        className: ''
+                    });
+                    L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+                        .addTo(modalMap)
+                        .bindPopup('ตำแหน่งของคุณ');
+
+                    // Line between
+                    L.polyline(
+                        [[userLocation.lat, userLocation.lng], [lat, lng]],
+                        { color: '#92C7CF', dashArray: '8, 8', weight: 2 }
+                    ).addTo(modalMap);
+                }
+
+                setTimeout(() => modalMap.invalidateSize(), 200);
+            }, 300);
+        }
+
+        // ===== GOOGLE SHEET JSONP (สำหรับ autocomplete จาก tab DATA เท่าน้ัน) =====
+        function jsonpRequest(params) {
+            return new Promise((resolve, reject) => {
+                const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                const script = document.createElement('script');
+                const timeout = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout — ตรวจสอบ SCRIPT_URL')); }, 15000);
+                function cleanup() {
+                    if (script.parentNode) script.parentNode.removeChild(script);
+                    delete window[callbackName];
+                    clearTimeout(timeout);
+                }
+                window[callbackName] = function(data) {
+                    cleanup();
+                    console.log('JSONP response:', data);
+                    if (data && data.error) {
+                        reject(new Error(data.error));
+                    } else {
+                        resolve(data);
+                    }
+                };
+                params.callback = callbackName;
+                const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+                console.log('JSONP request URL:', url);
+                script.onerror = () => { cleanup(); reject(new Error('JSONP load error — ไม่สามารถเข้าถึง Google Script ได้')); };
+                script.src = url;
+                document.head.appendChild(script);
+            });
+        }
+
+        // ===== AUTO-FILL FIELDS FROM DATA TAB =====
+        // Mapping: DATA tab column → form input id
+        const FIELD_MAP = {
+            'หมวด': 'inputCategory',
+            'สายจดหน่วย': 'inputLineUnit',
+            'ตำบล': 'inputTambon',
+            'พื้นที่ทำงาน': 'inputWorkArea',
+            'หมู่บ้าน': 'inputVillage',
+            'หมายเหตุ': 'inputNote',
+            'STATUS': 'inputStatus',
+            'คำแนะนำการวิ่ง': 'inputRunAdvice',
+            'พิกัดต้นสาย': 'inputCoords',
+            // รองรับชื่อ column ที่อาจต่างกัน
+            'สาย': 'inputLineUnit',
+            'หน่วย': 'inputLineUnit',
+            'ตำบล/แขวง': 'inputTambon',
+            'พื้นที่': 'inputWorkArea',
+            'หมู่': 'inputVillage',
+            'คำแนะนำ': 'inputRunAdvice',
+            'พิกัด': 'inputCoords',
+            'lat': null,  // ถ้ามี column lat/lng แยก
+            'lng': null,
+            'latitude': null,
+            'longitude': null,
+        };
+
+        function autoFillFields(data) {
+            console.log('autoFillFields called with:', data);
+            let filled = [];
+
+            Object.keys(data).forEach(key => {
+                const inputId = FIELD_MAP[key];
+                if (!inputId) return;
+
+                const el = document.getElementById(inputId);
+                if (!el) { console.log('Element not found:', inputId, 'for key:', key); return; }
+
+                let val = String(data[key] || '').trim();
+                if (!val) return;
+
+                // พิเศษ: ถ้ามี column lat และ lng แยก → รวมเป็นพิกัด
+                if ((key === 'lat' || key === 'latitude') && data['lng']) {
+                    val = `${val}, ${String(data['lng']).trim()}`;
+                    const coordsEl = document.getElementById('inputCoords');
+                    if (coordsEl) {
+                        coordsEl.value = val;
+                        filled.push('พิกัดต้นสาย');
+                    }
+                    return;
+                }
+                if (key === 'lng' || key === 'longitude') return;
+
+                // สำหรับ STATUS ต้อง match กับ option value
+                if (inputId === 'inputStatus') {
+                    const select = el;
+                    const options = Array.from(select.options);
+                    const exactMatch = options.find(o => o.value === val);
+                    if (exactMatch) { select.value = val; filled.push(key); return; }
+                    const partialMatch = options.find(o => o.value.includes(val) || val.includes(o.value));
+                    if (partialMatch) { select.value = partialMatch.value; filled.push(key); return; }
+                    return;
+                }
+
+                // สำหรับ input ปกติ
+                el.value = val;
+                filled.push(key);
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                console.log('Filled:', inputId, '=', val);
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+
+            // แสดงฟิลด์ที่เติม (debug)
+            if (filled.length > 0) {
+                console.log('Auto-filled fields:', filled.join(', '));
+            }
+        }
+
+        async function loadData() {
+            showLoading(true);
+
+            try {
+                console.log('Loading data from:', API_URL + '?action=getData');
+                const resp = await fetch(API_URL + '?action=getData');
+                console.log('Response status:', resp.status);
+                const result = await resp.json();
+                console.log('Response data:', result);
+
+                if (result.success && result.data && result.data.length > 0) {
+                    allData = result.data.map(row => ({
+                        id: row.id || '',
+                        วันที่: row.date || '',
+                        หมวด: row.category || '',
+                        สายจดหน่วย: row.line_unit || '',
+                        ตำบล: row.tambon || '',
+                        พื้นที่ทำงาน: row.work_area || '',
+                        หมู่บ้าน: row.village || '',
+                        หมายเหตุ: row.note || '',
+                        STATUS: row.status || 'รอดำเนินการ',
+                        คำแนะนำการวิ่ง: row.run_advice || '',
+                        พิกัดต้นสาย: row.coords || '',
+                        lat: row.lat || null,
+                        lng: row.lng || null,
+                        images: row.images ? JSON.parse(row.images) : []
+                    }));
+
+                    // Load suggestions จาก MyAdmin data
+                    lineUnitSuggestions = [...new Set(allData.map(d => d.สายจดหน่วย).filter(Boolean))];
+                    console.log('Suggestions from MyAdmin:', lineUnitSuggestions.length, lineUnitSuggestions.slice(0, 5));
+
+                    // เพิ่ม suggestions จาก Google Sheet tab DATA
+                    try {
+                        const sugResult = await jsonpRequest({ action: 'getSuggestions' });
+                        console.log('Google Sheet suggestions result:', sugResult);
+                        if (sugResult.suggestions && sugResult.suggestions.length > 0) {
+                            const merged = [...new Set([...lineUnitSuggestions, ...sugResult.suggestions])];
+                            lineUnitSuggestions = merged;
+                            console.log('Merged suggestions:', merged.length, merged.slice(0, 5));
+                        }
+                    } catch (sugErr) {
+                        console.warn('Could not load Sheet suggestions:', sugErr.message);
+                    }
+                    console.log('Final lineUnitSuggestions:', lineUnitSuggestions.length);
+                } else {
+                    console.warn('No data from API, using sample data. Result:', result);
+                    allData = getSampleData();
+                }
+
+                renderDataList(allData);
+                updateMiniMapMarkers();
+                dataLoaded = true;
+            } catch (error) {
+                console.error('Error loading data:', error);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'โหลดข้อมูลไม่สำเร็จ',
+                    text: error.message + '\nAPI: ' + API_URL,
+                    confirmButtonColor: '#92C7CF'
+                });
+                allData = getSampleData();
+                renderDataList(allData);
+                dataLoaded = true;
+            }
+
+            showLoading(false);
+        }
+
+        function getSampleData() {
+            return [
+                {
+                    id: '1', วันที่: '2025-01-15', หมวด: 'A', สายจดหน่วย: 'สาย 1 - หน่วย ก',
+                    ตำบล: 'บางเขน', พื้นที่ทำงาน: 'เขต 1', หมู่บ้าน: 'บ้านสวน',
+                    หมายเหตุ: 'ตรวจสอบสายหลัก', STATUS: 'เสร็จสิ้น', คำแนะนำการวิ่ง: 'วิ่งตรงไป 200ม.',
+                    พิกัดต้นสาย: '13.7563, 100.5018', images: []
+                },
+                {
+                    id: '2', วันที่: '2025-01-16', หมวด: 'B', สายจดหน่วย: 'สาย 2 - หน่วย ข',
+                    ตำบล: 'หลักสี่', พื้นที่ทำงาน: 'เขต 2', หมู่บ้าน: 'รามคำแหง',
+                    หมายเหตุ: 'เปลี่ยนสายใหม่', STATUS: 'กำลังดำเนินการ', คำแนะนำการวิ่ง: 'เลี้ยวซ้ายที่สี่แยก',
+                    พิกัดต้นสาย: '13.7800, 100.5200', images: []
+                },
+                {
+                    id: '3', วันที่: '2025-01-17', หมวด: 'A', สายจดหน่วย: 'สาย 3 - หน่วย ค',
+                    ตำบล: 'จตุจักร', พื้นที่ทำงาน: 'เขต 3', หมู่บ้าน: 'จตุจักร',
+                    หมายเหตุ: '', STATUS: 'รอดำเนินการ', คำแนะนำการวิ่ง: 'จอดที่ทางเท้า',
+                    พิกัดต้นสาย: '13.8000, 100.5400', images: []
+                }
+            ];
+        }
+
+        // ===== RENDER DATA LIST =====
+        function sortData(data) {
+            return [...data].sort((a, b) => {
+                const coordsA = parseCoords(a.พิกัดต้นสาย);
+                const coordsB = parseCoords(b.พิกัดต้นสาย);
+                const distA = coordsA && userLocation
+                    ? calcDistance(userLocation.lat, userLocation.lng, coordsA.lat, coordsA.lng)
+                    : Infinity;
+                const distB = coordsB && userLocation
+                    ? calcDistance(userLocation.lat, userLocation.lng, coordsB.lat, coordsB.lng)
+                    : Infinity;
+
+                // ถ้ามี GPS → เรียงตามระยะห่างก่อน (ใกล้สุดก่อน)
+                if (userLocation && distA !== distB) {
+                    return distA - distB;
+                }
+                // ไม่มี GPS ห่างเท่ากัน → เรียงตามวันที่ ใหม่สุดก่อน
+                const dateA = new Date(a.วันที่ || '1970-01-01');
+                const dateB = new Date(b.วันที่ || '1970-01-01');
+                return dateB - dateA;
+            });
+        }
+
+        function renderDataList(data) {
+            const container = document.getElementById('dataList');
+
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>ยังไม่มีข้อมูล</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // เรียงตามระยะห่างจากผู้ใช้ก่อน (ถ้ามี GPS) แล้วค่อยเรียงตามวันที่
+            const sorted = sortData(data);
+
+            container.innerHTML = sorted.map(item => {
+                const coords = parseCoords(item.พิกัดต้นสาย);
+                const statusClass = getStatusClass(item.STATUS);
+                const distance = coords && userLocation
+                    ? calcDistance(userLocation.lat, userLocation.lng, coords.lat, coords.lng)
+                    : null;
+                const itemId = item.id || item._row || '';
+
+                return `
+                    <div class="data-card" data-id="${escapeHtml(itemId)}">
+                        <div class="data-card-header" onclick="openDetail('${escapeHtml(itemId)}')">
+                            <div>
+                                <div class="data-card-title">📍 ${escapeHtml(item.สายจดหน่วย || 'ไม่ระบุ')}</div>
+                                <div class="data-card-subtitle">📅 ${escapeHtml(item.วันที่ || '')} • ${escapeHtml(item.หมวด || '')}</div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span class="status-badge ${statusClass}"
+                                      onclick="event.stopPropagation(); showStatusPicker('${escapeHtml(itemId)}', '${escapeHtml(item.STATUS || '')}')"
+                                      title="คลิกเพื่อเปลี่ยนสถานะ">
+                                    ${escapeHtml(item.STATUS || 'รอดำเนินการ')} ✏️
+                                </span>
+                                ${coords ? `
+                                <button class="map-btn"
+                                        onclick="event.stopPropagation(); focusOnPoint(${coords.lat}, ${coords.lng}, '${escapeHtml(item.สายจดหน่วย || '')}')"
+                                        title="ดูใกล้บนแผนที่">
+                                    🗺️
+                                </button>` : ''}
+                                <button class="map-btn"
+                                        onclick="event.stopPropagation(); shareItem('${escapeHtml(itemId)}')"
+                                        title="แชร์">
+                                    📤
+                                </button>
+                            </div>
+                        </div>
+                        <div class="data-card-body" onclick="openDetail('${escapeHtml(itemId)}')">
+                            <div class="item">
+                                <span class="icon">🏘️</span>
+                                <span>${escapeHtml(item.ตำบล || '-')}</span>
+                            </div>
+                            <div class="item">
+                                <span class="icon">🏠</span>
+                                <span>${escapeHtml(item.หมู่บ้าน || '-')}</span>
+                            </div>
+                            <div class="item">
+                                <span class="icon">🗂️</span>
+                                <span>${escapeHtml(item.พื้นที่ทำงาน || '-')}</span>
+                            </div>
+                            ${distance !== null ? `
+                            <div class="item">
+                                <span class="icon">📏</span>
+                                <span>${formatDistance(distance)}</span>
+                            </div>` : ''}
+                            ${item.คำแนะนำการวิ่ง ? `
+                            <div class="item full">
+                                <span class="icon">💡</span>
+                                <span>${escapeHtml(item.คำแนะนำการวิ่ง)}</span>
+                            </div>` : ''}
+                        </div>
+                        ${coords ? `
+                        <div class="data-card-coords" onclick="openDetail('${escapeHtml(itemId)}')">
+                            📍 ${coords.lat}, ${coords.lng}
+                        </div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== TABLE VIEW =====
+        let currentView = 'card'; // 'card' | 'table'
+        let tableSortCol = 'วันที่';
+        let tableSortDir = -1; // -1 desc, 1 asc
+
+        function renderDataTable(data) {
+            const container = document.getElementById('dataList');
+
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>ยังไม่มีข้อมูล</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const sorted = sortData(data);
+            const totalCount = data.length;
+            const doneCount = data.filter(d => d.STATUS === 'เสร็จสิ้น').length;
+            const progressCount = data.filter(d => d.STATUS === 'กำลังดำเนินการ').length;
+            const pendingCount = data.filter(d => d.STATUS === 'รอดำเนินการ' || !d.STATUS).length;
+
+            const columns = [
+                { key: 'วันที่', label: '📅 วันที่', width: '100px' },
+                { key: 'สายจดหน่วย', label: '🔌 สายจดหน่วย', width: '' },
+                { key: 'หมวด', label: '🗂️ หมวด', width: '70px' },
+                { key: 'ตำบล', label: '🏘️ ตำบล', width: '' },
+                { key: 'หมู่บ้าน', label: '🏠 หมู่บ้าน', width: '' },
+                { key: 'พื้นที่ทำงาน', label: '📍 พื้นที่', width: '' },
+                { key: 'STATUS', label: '📊 สถานะ', width: '130px' },
+                { key: 'พิกัดต้นสาย', label: '🗺️ พิกัด', width: '120px' },
+                { key: 'action', label: '⚡ จัดการ', width: '100px' },
+            ];
+
+            container.innerHTML = `
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                ${columns.map(col => col.key === 'action' ? `
+                                    <th style="width:${col.width}; text-align:center;">${col.label}</th>
+                                ` : `
+                                    <th style="width:${col.width};"
+                                        onclick="sortTable('${col.key}')"
+                                        class="${tableSortCol === col.key ? 'sorted' : ''}">
+                                        ${col.label}
+                                        <span class="sort-icon">${tableSortCol === col.key ? (tableSortDir === -1 ? '▼' : '▲') : '⇅'}</span>
+                                    </th>
+                                `).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sorted.map(item => {
+                                const coords = parseCoords(item.พิกัดต้นสาย);
+                                const statusClass = getStatusClass(item.STATUS);
+                                const itemId = item.id || item._row || '';
+
+                                return `
+                                <tr data-id="${escapeHtml(itemId)}">
+                                    <td>${escapeHtml(item.วันที่ || '-')}</td>
+                                    <td><b>${escapeHtml(item.สายจดหน่วย || '-')}</b></td>
+                                    <td>${escapeHtml(item.หมวด || '-')}</td>
+                                    <td>${escapeHtml(item.ตำบล || '-')}</td>
+                                    <td>${escapeHtml(item.หมู่บ้าน || '-')}</td>
+                                    <td>${escapeHtml(item.พื้นที่ทำงาน || '-')}</td>
+                                    <td>
+                                        <span class="table-status ${statusClass}"
+                                              onclick="showStatusPicker('${escapeHtml(itemId)}', '${escapeHtml(item.STATUS || '')}')"
+                                              title="คลิกเพื่อเปลี่ยนสถานะ">
+                                            ${escapeHtml(item.STATUS || 'รอดำเนินการ')} ✏️
+                                        </span>
+                                    </td>
+                                    <td>
+                                        ${coords ? `<span class="table-coords">${coords.lat}, ${coords.lng}</span>` : '-'}
+                                    </td>
+                                    <td style="text-align:center; white-space:nowrap;">
+                                        <button class="table-action-btn" onclick="openDetail('${escapeHtml(itemId)}')" title="รายละเอียด">📋</button>
+                                    </td>
+                                </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    <div class="table-count-info">
+                        <span>📊 ทั้งหมด <b>${totalCount}</b> รายการ • ✅ เสร็จ <b>${doneCount}</b> • 🔄 กำลังทำ <b>${progressCount}</b> • ⏳ รอ <b>${pendingCount}</b></span>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.sortTable = function(col) {
+            if (tableSortCol === col) {
+                tableSortDir *= -1;
+            } else {
+                tableSortCol = col;
+                tableSortDir = -1;
+            }
+            // Re-sort and render
+            const sorted = [...allData].sort((a, b) => {
+                const valA = String(a[col] || '').toLowerCase();
+                const valB = String(b[col] || '').toLowerCase();
+                if (valA < valB) return -1 * tableSortDir;
+                if (valA > valB) return 1 * tableSortDir;
+                return 0;
+            });
+            // Apply current filters
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const dateFilter = document.getElementById('filterDate').value;
+            let filtered = sorted;
+            if (search) {
+                filtered = filtered.filter(item => Object.values(item).some(v => String(v).toLowerCase().includes(search)));
+            }
+            if (statusFilter) {
+                filtered = filtered.filter(item => item.STATUS === statusFilter);
+            }
+            if (dateFilter) {
+                filtered = filtered.filter(item => item.วันที่ === dateFilter);
+            }
+            renderDataTable(filtered);
+        };
+
+        // ===== STATUS PICKER =====
+        window.showStatusPicker = function(itemId, currentStatus) {
+            Swal.fire({
+                title: '🔄 เปลี่ยนสถานะ',
+                html: `
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                        <button class="status-picker-btn" data-status="รอดำเนินการ" style="
+                            padding:14px; border:2px solid #e8b86d; border-radius:12px;
+                            background:${currentStatus === 'รอดำเนินการ' ? '#fff3cd' : '#fff'};
+                            font-family:'Mitr'; font-size:1rem; cursor:pointer;
+                            transition:all 0.2s;">
+                            ⏳ รอดำเนินการ
+                        </button>
+                        <button class="status-picker-btn" data-status="กำลังดำเนินการ" style="
+                            padding:14px; border:2px solid #92C7CF; border-radius:12px;
+                            background:${currentStatus === 'กำลังดำเนินการ' ? '#cce5ff' : '#fff'};
+                            font-family:'Mitr'; font-size:1rem; cursor:pointer;
+                            transition:all 0.2s;">
+                            🔄 กำลังดำเนินการ
+                        </button>
+                        <button class="status-picker-btn" data-status="เสร็จสิ้น" style="
+                            padding:14px; border:2px solid #6db892; border-radius:12px;
+                            background:${currentStatus === 'เสร็จสิ้น' ? '#d4edda' : '#fff'};
+                            font-family:'Mitr'; font-size:1rem; cursor:pointer;
+                            transition:all 0.2s;">
+                            ✅ เสร็จสิ้น
+                        </button>
+                    </div>
+                `,
+                showConfirmButton: false,
+                showCancelButton: true,
+                cancelButtonText: '❌ ปิด',
+                cancelButtonColor: '#E5E1DA',
+                didOpen: () => {
+                    document.querySelectorAll('.status-picker-btn').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            const newStatus = btn.dataset.status;
+                            if (newStatus === currentStatus) {
+                                Swal.close();
+                                return;
+                            }
+                            Swal.close();
+                            await updateStatus(itemId, newStatus);
+                        });
+                    });
+                }
+            });
+        };
+
+        async function updateStatus(itemId, newStatus) {
+            showLoading(true);
+
+            try {
+                // อัพเดทใน local data
+                const item = allData.find(d => String(d.id) === String(itemId) || String(d._row) === String(itemId));
+                if (item) {
+                    item.STATUS = newStatus;
+                }
+
+                // อัพเดทใน MySQL
+                await fetch(API_URL + '?action=updateStatus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: itemId, status: newStatus })
+                });
+
+                // Re-render
+                const search = document.getElementById('searchInput').value.toLowerCase();
+                const statusFilter = document.getElementById('filterStatus').value;
+                let filtered = allData;
+
+                if (search) {
+                    filtered = filtered.filter(item =>
+                        Object.values(item).some(v =>
+                            String(v).toLowerCase().includes(search)
+                        )
+                    );
+                }
+                if (statusFilter) {
+                    filtered = filtered.filter(item => item.STATUS === statusFilter);
+                }
+
+                renderDataList(filtered);
+                updateMiniMapMarkers();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'อัพเดทสถานะแล้ว!',
+                    text: `เปลี่ยนเป็น "${newStatus}"`,
+                    confirmButtonColor: '#92C7CF',
+                    timer: 1500,
+                    timerProgressBar: true
+                });
+            } catch (error) {
+                console.error('Update status error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถอัพเดทสถานะได้',
+                    confirmButtonColor: '#92C7CF'
+                });
+            }
+
+            showLoading(false);
+        }
+
+        function getStatusClass(status) {
+            if (!status) return 'status-pending';
+            if (status.includes('เสร็จ')) return 'status-done';
+            if (status.includes('กำลัง')) return 'status-progress';
+            return 'status-pending';
+        }
+
+        // ===== MINI MAP MARKERS =====
+        function updateMiniMapMarkers(data) {
+            const items = data || allData;
+
+            // Clear existing circle markers (keep miniMarker, user marker & tile layers)
+            miniMap.eachLayer(layer => {
+                if (layer instanceof L.CircleMarker || (layer instanceof L.Marker && layer !== miniMarker && !layer._focusMarker)) {
+                    if (!layer.getPopup || !layer.getPopup() || !layer.getPopup().getContent || !layer.getPopup().getContent().includes('ตำแหน่งของคุณ')) {
+                        miniMap.removeLayer(layer);
+                    }
+                }
+            });
+
+            const bounds = [];
+            items.forEach(item => {
+                // ไม่แสดงจุดที่เสร็จสิ้นแล้วบนแผนที่
+                if (item.STATUS === 'เสร็จสิ้น') return;
+
+                const coords = parseCoords(item.พิกัดต้นสาย);
+                if (coords) {
+                    const color = item.STATUS === 'กำลังดำเนินการ' ? '#e8b86d' : '#92C7CF';
+
+                    const circle = L.circleMarker([coords.lat, coords.lng], {
+                        radius: 8,
+                        fillColor: color,
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(miniMap);
+
+                    const mapDist = userLocation
+                        ? calcDistance(userLocation.lat, userLocation.lng, coords.lat, coords.lng)
+                        : null;
+
+                    circle.bindPopup(`
+                        <div style="font-family:Mitr; font-size:0.85rem; min-width:160px;">
+                            <b>📍 ${escapeHtml(item.สายจดหน่วย || '')}</b><br>
+                            <span style="color:#888; font-size:0.78rem;">${escapeHtml(item.ตำบล || '')} • ${escapeHtml(item.หมู่บ้าน || '')}</span><br>
+                            <span style="color:${color}; font-size:0.75rem; font-weight:600;">${escapeHtml(item.STATUS || '')}</span>
+                            ${mapDist !== null ? `<br><span style="font-size:0.75rem; color:#5a6c7d;">📏 ${formatDistance(mapDist)}</span>` : ''}
+                            <div style="margin-top:8px; display:flex; gap:6px;">
+                                <button onclick="openDetail('${escapeHtml(item.id || item._row || '')}')" style="
+                                    flex:1; padding:6px 10px; border:2px solid #92C7CF; border-radius:8px;
+                                    background:#fff; font-family:'Mitr'; font-size:0.75rem; cursor:pointer;
+                                    color:#92C7CF; transition:all 0.2s;">
+                                    📋 รายละเอียด
+                                </button>
+                            </div>
+                        </div>
+                    `);
+
+                    bounds.push([coords.lat, coords.lng]);
+                }
+            });
+
+            if (bounds.length > 0) {
+                miniMap.fitBounds(bounds, { padding: [20, 20], maxZoom: 14 });
+            }
+        }
+
+        // ===== FOCUS ON POINT (ขยายแผนที่ลอย + ซูมไปจุด) =====
+        window.focusOnPoint = function(lat, lng, label) {
+            const fm = document.getElementById('floatingMap');
+            const btn = document.getElementById('mapToggleBtn');
+
+            // ขยายแผนที่ถ้ายังไม่ขยาย
+            if (!fm.classList.contains('expanded')) {
+                fm.classList.add('expanded');
+                btn.textContent = '✕';
+                btn.style.transform = 'rotate(180deg)';
+            }
+
+            // ซูมไปยังจุด
+            miniMap.setView([lat, lng], 16);
+
+            // สร้าง temporary marker เน้นจุด
+            const focusIcon = L.divIcon({
+                html: '<div style="font-size:2.2rem; animation:pulse 1s ease-in-out infinite; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));">📍</div>',
+                iconSize: [36, 44],
+                iconAnchor: [18, 44],
+                className: ''
+            });
+
+            // ลบ focus marker เก่า (ถ้ามี)
+            miniMap.eachLayer(layer => {
+                if (layer._focusMarker) miniMap.removeLayer(layer);
+            });
+
+            const marker = L.marker([lat, lng], { icon: focusIcon }).addTo(miniMap);
+            marker._focusMarker = true;
+            marker.bindPopup(`<b style="font-family:Mitr;">📍 ${label || 'จุดรับสาย'}</b>`).openPopup();
+
+            // วงกลมแสดงรัศมี 50m
+            const circle = L.circle([lat, lng], {
+                radius: 50,
+                color: '#92C7CF',
+                fillColor: '#92C7CF',
+                fillOpacity: 0.15,
+                weight: 2,
+                dashArray: '6, 4'
+            }).addTo(miniMap);
+            circle._focusMarker = true;
+        }
+
+        // ===== DETAIL MODAL =====
+        window.openDetail = function(id) {
+            const item = allData.find(d => String(d.id) === String(id));
+            if (!item) return;
+
+            currentDetailItem = item;
+            const coords = parseCoords(item.พิกัดต้นสาย);
+
+            // Distance
+            const distEl = document.getElementById('distanceValue');
+            if (coords && userLocation) {
+                const dist = calcDistance(userLocation.lat, userLocation.lng, coords.lat, coords.lng);
+                distEl.textContent = formatDistance(dist);
+            } else {
+                distEl.textContent = 'ไม่ทราบ';
+            }
+
+            // Detail Grid
+            const detailGrid = document.getElementById('detailGrid');
+            const fields = [
+                { label: 'วันที่', value: item.วันที่, icon: '📅' },
+                { label: 'หมวด', value: item.หมวด, icon: '🗂️' },
+                { label: 'สายจดหน่วย', value: item.สายจดหน่วย, icon: '🔌' },
+                { label: 'ตำบล', value: item.ตำบล, icon: '🏘️' },
+                { label: 'พื้นที่ทำงาน', value: item.พื้นที่ทำงาน, icon: '📍' },
+                { label: 'หมู่บ้าน', value: item.หมู่บ้าน, icon: '🏠' },
+                { label: 'STATUS', value: item.STATUS, icon: '📊' },
+                { label: 'คำแนะนำการวิ่ง', value: item.คำแนะนำการวิ่ง, icon: '💡' },
+                { label: 'หมายเหตุ', value: item.หมายเหตุ, icon: '📝', full: true },
+            ];
+
+            detailGrid.innerHTML = fields.map(f => f.value ? `
+                <div class="detail-item ${f.full ? 'full' : ''}">
+                    <div class="label">${f.icon} ${f.label}</div>
+                    <div class="value">${escapeHtml(f.value)}</div>
+                </div>
+            ` : '').join('');
+
+            // Images
+            const modalImages = document.getElementById('modalImages');
+            const images = item.images || [];
+            if (images.length > 0) {
+                modalImages.innerHTML = `
+                    <h4 style="font-size:0.9rem; margin-bottom:8px;">📷 รูปภาพ</h4>
+                    <div class="image-grid">
+                        ${images.map(img => `
+                            <img src="${img}" onclick="openImageModal('${img}')" alt="รูปภาพ">
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                modalImages.innerHTML = '';
+            }
+
+            // Navigate button
+            document.getElementById('navigateBtn').onclick = function() {
+                if (coords) {
+                    const url = `https://www.google.com/maps/dir/?api=1&destination=${coords.lat},${coords.lng}`;
+                    window.open(url, '_blank');
+                } else {
+                    Swal.fire('ไม่พบพิกัด', 'จุดนี้ไม่มีข้อมูลพิกัด', 'warning');
+                }
+            };
+
+            // Show modal
+            document.getElementById('detailModal').classList.add('active');
+
+            // Init map
+            if (coords) {
+                initModalMap(coords.lat, coords.lng);
+            }
+        };
+
+        function closeDetail() {
+            document.getElementById('detailModal').classList.remove('active');
+            currentDetailItem = null;
+        }
+
+        // ===== IMAGE MODAL =====
+        window.openImageModal = function(src) {
+            document.getElementById('imageModalImg').src = src;
+            document.getElementById('imageModal').classList.add('active');
+        };
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+        }
+
+        // ===== IMAGE UPLOAD =====
+        // (moved to initEventListeners)
+
+        function handleImageFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64 = e.target.result;
+                    uploadedImages.push(base64);
+                    renderImagePreviews();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderImagePreviews() {
+            const grid = document.getElementById('imagePreviewGrid');
+            grid.innerHTML = uploadedImages.map((img, i) => `
+                <div class="image-preview-item">
+                    <img src="${img}" alt="Preview">
+                    <button class="remove-img" onclick="removeImage(${i})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        window.removeImage = function(index) {
+            uploadedImages.splice(index, 1);
+            renderImagePreviews();
+        };
+
+
+        // ===== SHARE SINGLE ITEM =====
+        window.shareItem = function(itemId) {
+            const item = allData.find(d => String(d.id) === String(itemId));
+            if (!item) return;
+            const text = `📍 ${item.สายจดหน่วย || ''}\n🏘️ ${item.ตำบล || ''} | 🏠 ${item.หมู่บ้าน || ''}\n📅 ${item.วันที่ || ''} | สถานะ: ${item.STATUS || ''}\n📏 ${item.พิกัดต้นสาย || ''}`;
+            navigator.clipboard.writeText(text).then(() => {
+                Swal.fire({ icon: 'success', title: 'คัดลอกแล้ว! 📋', confirmButtonColor: '#92C7CF', timer: 1500 });
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                Swal.fire('คัดลอกแล้ว! 📋', '', 'success');
+            });
+        };
+
+        // ===== SHARE ALL =====
+        window.shareData = function() {
+            const shareData = allData.map(d =>
+                `${d.สายจดหน่วย || ''} | ${d.ตำบล || ''} | ${d.หมู่บ้าน || ''} | ${d.STATUS || ''} | ${d.พิกัดต้นสาย || ''}`
+            ).join('\n');
+
+            const header = 'สายจดหน่วย | ตำบล | หมู่บ้าน | สถานะ | พิกัด\n';
+            const text = header + '─'.repeat(40) + '\n' + shareData;
+
+            navigator.clipboard.writeText(text).then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'คัดลอกแล้ว! 📋',
+                    text: 'ข้อมูลถูกคัดลอกไปยังคลิปบอร์ดแล้ว',
+                    confirmButtonColor: '#92C7CF',
+                    timer: 2000
+                });
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                Swal.fire('คัดลอกแล้ว! 📋', '', 'success');
+            });
+        };
+
+        // ===== MODAL CLOSE =====
+        document.getElementById('modalClose').addEventListener('click', function() {
+            console.log('modalClose clicked');
+            closeDetail();
+        });
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            console.log('detailModal clicked, target:', e.target.id, 'this:', this.id);
+            if (e.target === this) closeDetail();
+        });
+        document.getElementById('imageModalClose').addEventListener('click', function() {
+            console.log('imageModalClose clicked');
+            closeImageModal();
+        });
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) closeImageModal();
+        });
+        // ESC key to close modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('detailModal').classList.remove('active');
+                document.getElementById('addModal').classList.remove('active');
+                document.getElementById('imageModal').classList.remove('active');
+            }
+        });
+
+        // ===== WEATHER API (Open-Meteo) =====
+        const WEATHER_CODE_MAP = {
+            0:  { icon: '☀️', desc: 'แจ่มใส' },
+            1:  { icon: '🌤️', desc: 'มีเมฆบางส่วน' },
+            2:  { icon: '⛅', desc: 'มีเมฆปานกลาง' },
+            3:  { icon: '☁️', desc: 'มีเมฆมาก' },
+            45: { icon: '🌫️', desc: 'หมอลง' },
+            48: { icon: '🌫️', desc: 'หมอลงแข็งตัว' },
+            51: { icon: '🌦️', desc: 'ฝนปรอยเบา' },
+            53: { icon: '🌦️', desc: 'ฝนปรอยปานกลาง' },
+            55: { icon: '🌧️', desc: 'ฝนปรอยหนัก' },
+            56: { icon: '🌧️', desc: 'ฝนปรอยเยือกแข็งเบา' },
+            57: { icon: '🌧️', desc: 'ฝนปรอยเยือกแข็งหนัก' },
+            61: { icon: '🌧️', desc: 'ฝนเบา' },
+            63: { icon: '🌧️', desc: 'ฝนปานกลาง' },
+            65: { icon: '🌧️', desc: 'ฝนหนัก' },
+            66: { icon: '🌧️', desc: 'ฝนเยือกแข็งเบา' },
+            67: { icon: '🌧️', desc: 'ฝนเยือกแข็งหนัก' },
+            71: { icon: '🌨️', desc: 'หิมะเบา' },
+            73: { icon: '🌨️', desc: 'หิมะปานกลาง' },
+            75: { icon: '❄️', desc: 'หิมะหนัก' },
+            77: { icon: '🌨️', desc: 'เม็ดหิมะ' },
+            80: { icon: '🌦️', desc: 'ฝนฟ้าคะนองเบา' },
+            81: { icon: '🌧️', desc: 'ฝนฟ้าคะนองปานกลาง' },
+            82: { icon: '⛈️', desc: 'ฝนฟ้าคะนองหนัก' },
+            85: { icon: '🌨️', desc: 'หิมะเบา' },
+            86: { icon: '🌨️', desc: 'หิมะหนัก' },
+            95: { icon: '⛈️', desc: 'พายุฟ้าคะนอง' },
+            96: { icon: '⛈️', desc: 'พายุฟ้าคะนองพร้อมลูกเห็บเบา' },
+            99: { icon: '⛈️', desc: 'พายุฟ้าคะนองพร้อมลูกเห็บหนัก' },
+        };
+
+        function getWeatherInfo(code) {
+            return WEATHER_CODE_MAP[code] || { icon: '🌡️', desc: 'ไม่ทราบ' };
+        }
+
+        function formatDateShort(dateStr) {
+            const d = new Date(dateStr);
+            const days = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+            return `${days[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1}`;
+        }
+
+        async function fetchWeather(lat, lng) {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia/Bangkok&forecast_days=4`;
+            const response = await fetch(url);
+            return await response.json();
+        }
+
+        function buildWeatherPopupContent(weatherData, locationName) {
+            const cur = weatherData.current;
+            const daily = weatherData.daily;
+            const wInfo = getWeatherInfo(cur.weather_code);
+
+            let forecastHtml = '';
+            for (let i = 0; i < Math.min(4, daily.time.length); i++) {
+                const fInfo = getWeatherInfo(daily.weather_code[i]);
+                const rain = daily.precipitation_sum[i];
+                forecastHtml += `
+                    <div class="forecast-row">
+                        <span class="forecast-date">${formatDateShort(daily.time[i])}</span>
+                        <span class="forecast-icon">${fInfo.icon}</span>
+                        <span class="forecast-temp">
+                            ${Math.round(daily.temperature_2m_max[i])}°
+                            <span class="low">${Math.round(daily.temperature_2m_min[i])}°</span>
+                        </span>
+                        ${rain > 0 ? `<span class="forecast-rain">💧${rain}มม.</span>` : ''}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="weather-popup">
+                    <div class="weather-popup-header">
+                        <span class="weather-popup-icon">${wInfo.icon}</span>
+                        <div>
+                            <div class="weather-popup-temp">${Math.round(cur.temperature_2m)}°<span class="unit">C</span></div>
+                            <div class="weather-popup-desc">${wInfo.desc}</div>
+                        </div>
+                    </div>
+                    <div class="weather-popup-grid">
+                        <div class="weather-popup-item">
+                            <span class="w-icon">🌡️</span>
+                            <div>
+                                <div class="w-label">รู้สึกเหมือน</div>
+                                <div class="w-value">${Math.round(cur.apparent_temperature)}°C</div>
+                            </div>
+                        </div>
+                        <div class="weather-popup-item">
+                            <span class="w-icon">💧</span>
+                            <div>
+                                <div class="w-label">ความชื้น</div>
+                                <div class="w-value">${cur.relative_humidity_2m}%</div>
+                            </div>
+                        </div>
+                        <div class="weather-popup-item">
+                            <span class="w-icon">💨</span>
+                            <div>
+                                <div class="w-label">ลม</div>
+                                <div class="w-value">${Math.round(cur.wind_speed_10m)} กม./ชม.</div>
+                            </div>
+                        </div>
+                        <div class="weather-popup-item">
+                            <span class="w-icon">🧭</span>
+                            <div>
+                                <div class="w-label">ทิศลม</div>
+                                <div class="w-value">${getWindDir(cur.wind_direction_10m)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="weather-popup-forecast">
+                        <h4>📅 พยากรณ์ 4 วัน</h4>
+                        ${forecastHtml}
+                    </div>
+                    <div class="weather-popup-footer">Open-Meteo • ${locationName || `${weatherData.latitude.toFixed(4)}, ${weatherData.longitude.toFixed(4)}`}</div>
+                </div>
+            `;
+        }
+
+        function getWindDir(deg) {
+            const dirs = ['เหนือ', 'ตะวันออกเฉียงเหนือ', 'ตะวันออก', 'ตะวันออกเฉียงใต้', 'ใต้', 'ตะวันตกเฉียงใต้', 'ตะวันตก', 'ตะวันตกเฉียงเหนือ'];
+            return dirs[Math.round(deg / 45) % 8];
+        }
+
+        function showWeatherPopup(lat, lng, locationName) {
+            // สร้าง popup พร้อม loading
+            const popup = L.popup({
+                maxWidth: 300,
+                minWidth: 240,
+                className: 'weather-leaflet-popup'
+            })
+            .setLatLng([lat, lng])
+            .setContent(`
+                <div class="weather-popup-loading">
+                    <div class="spinner"></div>
+                    กำลังโหลดพยากรณ์อากาศ...
+                </div>
+            `)
+            .openOn(miniMap);
+
+            // ถ้า modal map เปิดอยู่ด้วย เปิด popup บนนั้นด้วย
+            if (modalMap) {
+                const modalPopup = L.popup({
+                    maxWidth: 300,
+                    minWidth: 240,
+                    className: 'weather-leaflet-popup'
+                })
+                .setLatLng([lat, lng])
+                .setContent(`
+                    <div class="weather-popup-loading">
+                        <div class="spinner"></div>
+                        กำลังโหลดพยากรณ์อากาศ...
+                    </div>
+                `)
+                .openOn(modalMap);
+            }
+
+            // Fetch weather data
+            fetchWeather(lat, lng)
+                .then(data => {
+                    const content = buildWeatherPopupContent(data, locationName);
+                    popup.setContent(content);
+                    if (modalMap) {
+                        modalMap.closePopup();
+                        L.popup({
+                            maxWidth: 300,
+                            minWidth: 240,
+                            className: 'weather-leaflet-popup'
+                        })
+                        .setLatLng([lat, lng])
+                        .setContent(content)
+                        .openOn(modalMap);
+                    }
+                })
+                .catch(err => {
+                    console.error('Weather fetch error:', err);
+                    const errorContent = `
+                        <div class="weather-popup-error">
+                            ⚠️ ไม่สามารถโหลดข้อมูลอากาศได้<br>
+                            <small>${err.message}</small>
+                        </div>
+                    `;
+                    popup.setContent(errorContent);
+                });
+        }
+
+        // ===== WEATHER FOR CURRENT LOCATION (HEADER BUTTON) =====
+        function showWeatherPopupForCurrentLocation() {
+            if (!userLocation) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'ไม่พบตำแหน่ง',
+                    text: 'กรุณาอนุญาตให้เข้าถึงตำแหน่ง GPS ก่อน',
+                    confirmButtonColor: '#92C7CF'
+                });
+                return;
+            }
+            showWeatherPopup(userLocation.lat, userLocation.lng, 'ตำแหน่งของคุณ');
+        }
+
+        // ===== UTILITY FUNCTIONS =====
+
+        // Normalize วันที่เป็น YYYY-MM-DD (รองรับ DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, Date object)
+        // แปลงวันที่เป็น YYYY-MM-DD ใน timezone UTC+7 (Bangkok)
+        function toBangkokDate(d) {
+            // สร้าง string วันที่จาก UTC+7 โดยไม่พึ่ง local timezone
+            const utcMs = d.getTime() + d.getTimezoneOffset() * 60000;
+            const bangkokMs = utcMs + 7 * 3600000; // +7 ชม.
+            const bangkok = new Date(bangkokMs);
+            const y = bangkok.getUTCFullYear();
+            const m = String(bangkok.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(bangkok.getUTCDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function normalizeDate(dateStr) {
+            if (!dateStr) return '';
+            const str = String(dateStr).trim();
+
+            // ถ้าเป็น YYYY-MM-DD อยู่แล้ว → ใช้เลย (เป็น date-only ไม่มี timezone issue)
+            if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+
+            // DD/MM/YYYY หรือ DD-MM-YYYY → แปลงเป็น YYYY-MM-DD
+            const dmMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+            if (dmMatch) {
+                const d = dmMatch[1].padStart(2, '0');
+                const m = dmMatch[2].padStart(2, '0');
+                const y = dmMatch[3];
+                return `${y}-${m}-${d}`;
+            }
+
+            // YYYY/MM/DD หรือ YYYY-MM-DD
+            const ymMatch = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+            if (ymMatch) {
+                const y = ymMatch[1];
+                const m = ymMatch[2].padStart(2, '0');
+                const d = ymMatch[3].padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+
+            // ลอง parse ด้วย Date object → แปลงเป็น UTC+7
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                return toBangkokDate(d);
+            }
+
+            return str;
+        }
+
+        function parseCoords(str) {
+            if (!str) return null;
+            const parts = String(str).split(',').map(s => parseFloat(s.trim()));
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                return { lat: parts[0], lng: parts[1] };
+            }
+            return null;
+        }
+
+        function calcDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function formatDistance(meters) {
+            if (meters < 1000) {
+                return Math.round(meters) + ' ม.';
+            }
+            return (meters / 1000).toFixed(2) + ' กม.';
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('active', show);
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function initEventListeners() {
+
+            // ===== FORM SUBMISSION =====
+            document.getElementById('dataForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const coords = parseCoords(document.getElementById('inputCoords').value);
+                if (!coords) {
+                    Swal.fire({ icon: 'warning', title: 'พิกัดไม่ถูกต้อง', text: 'กรุณาระบุพิกัดในรูปแบบ: ละติจูด, ลองจิจูด', confirmButtonColor: '#92C7CF' });
+                    return;
+                }
+                const formData = {
+                    id: Date.now().toString(),
+                    วันที่: document.getElementById('inputDate').value,
+                    หมวด: document.getElementById('inputCategory').value,
+                    สายจดหน่วย: document.getElementById('inputLineUnit').value,
+                    ตำบล: document.getElementById('inputTambon').value,
+                    พื้นที่ทำงาน: document.getElementById('inputWorkArea').value,
+                    หมู่บ้าน: document.getElementById('inputVillage').value,
+                    หมายเหตุ: document.getElementById('inputNote').value,
+                    STATUS: document.getElementById('inputStatus').value,
+                    คำแนะนำการวิ่ง: document.getElementById('inputRunAdvice').value,
+                    พิกัดต้นสาย: `${coords.lat}, ${coords.lng}`,
+                    images: [...uploadedImages]
+                };
+                showLoading(true);
+                try {
+                    const resp = await fetch(API_URL + '?action=append', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: formData }) });
+                    const result = await resp.json();
+                    if (!result.success) throw new Error(result.error || 'Save failed');
+                    allData.unshift(formData);
+                    renderDataList(allData);
+                    updateMiniMapMarkers();
+                    document.getElementById('dataForm').reset();
+                    initDate();
+                    uploadedImages = [];
+                    document.getElementById('imagePreviewGrid').innerHTML = '';
+                    if (miniMarker) { miniMap.removeLayer(miniMarker); miniMarker = null; }
+                    document.getElementById('addModal').classList.remove('active');
+                    Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ! 🎉', text: 'ข้อมูลถูกบันทึกเรียบร้อยแล้ว', confirmButtonColor: '#92C7CF', timer: 2500, timerProgressBar: true });
+                } catch (error) {
+                    console.error('Save error:', error);
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่', confirmButtonColor: '#92C7CF' });
+                }
+                showLoading(false);
+            });
+
+            // ===== IMAGE UPLOAD =====
+            const imageUploadArea = document.getElementById('imageUploadArea');
+            const imageInput = document.getElementById('imageInput');
+            imageUploadArea.addEventListener('click', () => imageInput.click());
+            imageUploadArea.addEventListener('dragover', (e) => { e.preventDefault(); imageUploadArea.style.borderColor = 'var(--primary)'; });
+            imageUploadArea.addEventListener('dragleave', () => { imageUploadArea.style.borderColor = 'var(--gray)'; });
+            imageUploadArea.addEventListener('drop', (e) => { e.preventDefault(); imageUploadArea.style.borderColor = 'var(--gray)'; handleImageFiles(e.dataTransfer.files); });
+            imageInput.addEventListener('change', (e) => { handleImageFiles(e.target.files); });
+
+            // ===== CLEAR FORM =====
+            document.getElementById('btnClearForm').addEventListener('click', function() {
+                document.getElementById('dataForm').reset();
+                initDate();
+                uploadedImages = [];
+                document.getElementById('imagePreviewGrid').innerHTML = '';
+                if (miniMarker) { miniMap.removeLayer(miniMarker); miniMarker = null; }
+            });
+
+            // ===== GPS BUTTON =====
+            document.getElementById('btnGetLocation').addEventListener('click', function() {
+                if (!navigator.geolocation) { Swal.fire('ไม่รองรับ', 'เบราว์เซอร์ไม่รองรับ Geolocation', 'error'); return; }
+                const btn = this;
+                btn.textContent = '⏳...';
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        const lat = pos.coords.latitude.toFixed(6);
+                        const lng = pos.coords.longitude.toFixed(6);
+                        document.getElementById('inputCoords').value = `${lat}, ${lng}`;
+                        userLocation = { lat: parseFloat(lat), lng: parseFloat(lng) };
+                        if (miniMarker) miniMap.removeLayer(miniMarker);
+                        miniMarker = L.marker([lat, lng]).addTo(miniMap);
+                        miniMap.setView([lat, lng], 15);
+                        btn.textContent = '📍 GPS';
+                        showToast('📍 รับพิกัด GPS สำเร็จ', 'success');
+                    },
+                    err => { btn.textContent = '📍 GPS'; showToast('ไม่สามารถรับพิกัดได้', 'error'); },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+
+            // ===== SUGGESTIONS AUTOCOMPLETE =====
+            const lineUnitInput = document.getElementById('inputLineUnit');
+            const suggestionsList = document.getElementById('suggestionsList');
+            lineUnitInput.addEventListener('input', function() {
+                const val = this.value.toLowerCase();
+                suggestionsList.innerHTML = '';
+                if (!val) { suggestionsList.classList.remove('active'); return; }
+                const matches = lineUnitSuggestions.filter(s => s.toLowerCase().includes(val));
+                if (!matches.length) { suggestionsList.classList.remove('active'); return; }
+                matches.forEach(s => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.textContent = s;
+                    div.dataset.value = s;
+                    suggestionsList.appendChild(div);
+                });
+                suggestionsList.classList.add('active');
+            });
+            suggestionsList.addEventListener('click', async function(e) {
+                if (e.target.classList.contains('suggestion-item')) {
+                    const selectedLine = e.target.dataset.value;
+                    lineUnitInput.value = selectedLine;
+                    suggestionsList.classList.remove('active');
+                    console.log('Suggestion clicked:', selectedLine);
+
+                    // ลองดึงจาก Google Sheet ก่อน
+                    try {
+                        const result = await jsonpRequest({ action: 'getLineData', line: selectedLine });
+                        console.log('getLineData result:', result);
+                        if (result.found && result.data && Object.keys(result.data).length > 0) {
+                            autoFillFields(result.data);
+                            showToast('✅ เติมข้อมูลอัตโนมัติแล้ว: ' + Object.keys(result.data).length + ' ฟิลด์', 'success');
+                            return;
+                        }
+                    } catch (err) {
+                        console.warn('Google Sheet auto-fill failed:', err.message);
+                    }
+
+                    // Fallback: หาข้อมูลจาก local data (MyAdmin)
+                    const localItem = allData.find(d => d.สายจดหน่วย === selectedLine);
+                    if (localItem) {
+                        const localData = {
+                            'หมวด': localItem.หมวด || '',
+                            'สายจดหน่วย': localItem.สายจดหน่วย || '',
+                            'ตำบล': localItem.ตำบล || '',
+                            'พื้นที่ทำงาน': localItem.พื้นที่ทำงาน || '',
+                            'หมู่บ้าน': localItem.หมู่บ้าน || '',
+                            'หมายเหตุ': localItem.หมายเหตุ || '',
+                            'STATUS': localItem.STATUS || '',
+                            'คำแนะนำการวิ่ง': localItem.คำแนะนำการวิ่ง || '',
+                            'พิกัดต้นสาย': localItem.พิกัดต้นสาย || '',
+                        };
+                        autoFillFields(localData);
+                        showToast('✅ เติมข้อมูลจากรายการที่มีอยู่แล้ว', 'success');
+                    } else {
+                        showToast('⚠️ ไม่พบข้อมูลเพิ่มเติมสำหรับสายนี้', 'info');
+                    }
+                }
+            });
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.form-group')) suggestionsList.classList.remove('active');
+            });
+
+            // ===== FILTER & SEARCH =====
+            function applyFilters() {
+                const search = document.getElementById('searchInput').value.toLowerCase();
+                const statusFilter = document.getElementById('filterStatus').value;
+                const dateFilter = document.getElementById('filterDate').value;
+                let filtered = allData;
+                if (search) filtered = filtered.filter(item => Object.values(item).some(v => String(v).toLowerCase().includes(search)));
+                if (statusFilter) filtered = filtered.filter(item => item.STATUS === statusFilter);
+                if (dateFilter) filtered = filtered.filter(item => normalizeDate(item.วันที่) === dateFilter);
+                if (currentView === 'table') renderDataTable(filtered); else renderDataList(filtered);
+                updateMiniMapMarkers(filtered);
+            }
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+            document.getElementById('filterStatus').addEventListener('change', applyFilters);
+            document.getElementById('filterDate').addEventListener('change', applyFilters);
+
+            // ===== VIEW TOGGLE =====
+            document.getElementById('viewCardBtn').addEventListener('click', function() {
+                currentView = 'card';
+                this.classList.add('active');
+                document.getElementById('viewTableBtn').classList.remove('active');
+                renderDataList(allData);
+            });
+            document.getElementById('viewTableBtn').addEventListener('click', function() {
+                currentView = 'table';
+                this.classList.add('active');
+                document.getElementById('viewCardBtn').classList.remove('active');
+                renderDataTable(allData);
+            });
+
+            // ===== FLOATING MAP TOGGLE =====
+            document.getElementById('mapToggleBtn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                const fm = document.getElementById('floatingMap');
+                const isExpanding = !fm.classList.contains('expanded');
+                fm.classList.toggle('expanded');
+                this.textContent = fm.classList.contains('expanded') ? '✕' : '⛶';
+                this.style.transform = fm.classList.contains('expanded') ? 'rotate(180deg)' : 'rotate(0deg)';
+                if (isExpanding) setTimeout(() => miniMap.invalidateSize(), 400);
+            });
+            document.getElementById('floatingMap').addEventListener('click', function(e) {
+                if (!this.classList.contains('expanded') && e.target.id !== 'mapToggleBtn') {
+                    document.getElementById('mapToggleBtn').click();
+                }
+            });
+
+            // ===== ADD FORM MODAL (FAB) =====
+            document.getElementById('fabAddBtn').addEventListener('click', function() {
+                document.getElementById('addModal').classList.add('active');
+                initDate();
+            });
+
+            // ===== ADD LINE VIEW FORM =====
+            document.getElementById('addLineFormView').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+                const lineData = {
+                    id: Date.now().toString(),
+                    วันที่: new Date().toISOString().split('T')[0],
+                    หมวด: document.getElementById('lineCategoryView').value.trim(),
+                    สายจดหน่วย: document.getElementById('lineNameView').value.trim(),
+                    ตำบล: document.getElementById('lineTambonView').value.trim(),
+                    หมู่บ้าน: document.getElementById('lineVillageView').value.trim(),
+                    พิกัดต้นสาย: document.getElementById('lineCoordsView').value.trim(),
+                    หมายเหตุ: document.getElementById('lineNoteView').value.trim(),
+                    STATUS: 'รอดำเนินการ',
+                    added_by: user.fullname || user.username || 'ไม่ระบุ',
+                    images: []
+                };
+                console.log('Saving line:', lineData);
+                if (!lineData.สายจดหน่วย) { Swal.fire('กรุณาระบุชื่อสาย', '', 'warning'); return; }
+                showLoading(true);
+                try {
+                    const url = API_URL + '?action=append';
+                    console.log('POST to:', url);
+                    const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: lineData }) });
+                    console.log('Response status:', resp.status);
+                    const text = await resp.text();
+                    console.log('Response text:', text);
+                    let result;
+                    try { result = JSON.parse(text); } catch (parseErr) { throw new Error('Invalid JSON: ' + text.substring(0, 200)); }
+                    console.log('Parsed result:', result);
+                    if (!result.success) throw new Error(result.error || 'Save failed');
+                    allData.unshift(lineData);
+                    renderDataList(allData);
+                    updateMiniMapMarkers();
+                    document.getElementById('addLineFormView').reset();
+                    Swal.fire({ icon: 'success', title: 'เพิ่มสายสำเร็จ! 🎉', confirmButtonColor: '#92C7CF', timer: 2000 });
+                } catch (err) {
+                    console.error('Add line error:', err);
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#92C7CF' });
+                } finally {
+                    showLoading(false);
+                }
+            });
+            document.getElementById('addModalClose').addEventListener('click', function() {
+                document.getElementById('addModal').classList.remove('active');
+            });
+            document.getElementById('addModal').addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('active');
+            });
+
+            // ===== DETAIL MODAL CLOSE =====
+            document.getElementById('modalClose').addEventListener('click', closeDetail);
+            document.getElementById('detailModal').addEventListener('click', function(e) {
+                if (e.target === this) closeDetail();
+            });
+
+            // ===== IMAGE MODAL CLOSE =====
+            document.getElementById('imageModalClose').addEventListener('click', closeImageModal);
+            document.getElementById('imageModal').addEventListener('click', function(e) {
+                if (e.target === this) closeImageModal();
+            });
+
+            // ===== ESC KEY =====
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeDetail();
+                    closeImageModal();
+                    document.getElementById('addModal').classList.remove('active');
+                }
+            });
+
+            // ===== LOGIN VIEW EVENTS =====
+            document.getElementById('tabLogin').addEventListener('click', function() { switchAuthTab('login'); });
+            document.getElementById('tabRegister').addEventListener('click', function() { switchAuthTab('register'); });
+            document.getElementById('btnLoginSubmit').addEventListener('click', handleLogin);
+            document.getElementById('btnRegisterSubmit').addEventListener('click', handleRegister);
+
+            // ===== DASHBOARD VIEW EVENTS =====
+            document.getElementById('dashCardMain').addEventListener('click', function() { showView('main'); });
+            document.getElementById('dashCardAddLine').addEventListener('click', function() { showView('addLine'); });
+
+            // ===== ADD LINE VIEW EVENTS =====
+            document.getElementById('addLineBackBtn').addEventListener('click', function() { showView('dashboard'); });
+            document.getElementById('btnClearAddLineView').addEventListener('click', function() { document.getElementById('addLineFormView').reset(); });
+
+            // ===== MAIN VIEW BACK BUTTON =====
+            document.getElementById('mainBackBtn').addEventListener('click', function() { showView('dashboard'); });
+        }
+
+    </script>
+
+    <!-- FAB BUTTON (inside mainView) -->
+    <button class="fab-btn" id="fabAddBtn" title="บันทึกข้อมูลจุดรับสาย">➕</button>
+
+    <!-- ADD FORM MODAL -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-content" style="max-width:650px; max-height:90vh; border-radius:20px;">
+            <div class="modal-header">
+                <h3>📝 บันทึกข้อมูลจุดรับสาย</h3>
+                <button class="modal-close" id="addModalClose">✕</button>
+            </div>
+            <form id="dataForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>วันที่ <span class="required">*</span></label>
+                        <input type="date" id="inputDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>หมวด</label>
+                        <input type="text" id="inputCategory" placeholder="ระบุหมวด...">
+                    </div>
+                    <div class="form-group" style="position:relative;">
+                        <label>สายจดหน่วย <span class="required">*</span></label>
+                        <input type="text" id="inputLineUnit" placeholder="พิมพ์เพื่อค้นหา..." autocomplete="off" required>
+                        <div class="suggestions-list" id="suggestionsList"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>ตำบล</label>
+                        <input type="text" id="inputTambon" placeholder="ระบุตำบล...">
+                    </div>
+                    <div class="form-group">
+                        <label>พื้นที่ทำงาน</label>
+                        <input type="text" id="inputWorkArea" placeholder="ระบุพื้นที่ทำงาน...">
+                    </div>
+                    <div class="form-group">
+                        <label>หมู่บ้าน</label>
+                        <input type="text" id="inputVillage" placeholder="ระบุหมู่บ้าน...">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>หมายเหตุ</label>
+                        <textarea id="inputNote" placeholder="ระบุหมายเหตุ..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>STATUS</label>
+                        <select id="inputStatus">
+                            <option value="รอดำเนินการ">⏳ รอดำเนินการ</option>
+                            <option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
+                            <option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>คำแนะนำการวิ่ง</label>
+                        <input type="text" id="inputRunAdvice" placeholder="คำแนะนำ...">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>พิกัดต้นสาย</label>
+                        <div class="coord-input-group">
+                            <input type="text" id="inputCoords" placeholder="เช่น 13.7563, 100.5018" inputmode="decimal">
+                            <button type="button" class="coord-btn" id="btnGetLocation" title="รับพิกัดจาก GPS">📍 GPS</button>
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>📷 แนบรูปภาพ</label>
+                        <div class="image-upload-area" id="imageUploadArea">
+                            <div class="upload-icon">📸</div>
+                            <p>คลิกเพื่อเลือกรูป หรือลากรูปมาวาง</p>
+                            <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
+                        </div>
+                        <div class="image-preview-grid" id="imagePreviewGrid"></div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">💾 บันทึก</button>
+                    <button type="button" class="btn btn-outline" id="btnClearForm">🗑️ ล้างฟอร์ม</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
