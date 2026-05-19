@@ -1402,71 +1402,92 @@
             display: block;
         }
 
-        /* ===== LOGIN VIEW ===== */
-        .login-view {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+        /* ===== DATA TABLE VIEW ===== */
+        .datatable-view {
+            padding: 16px;
+            max-width: 100%;
+        }
+        .datatable-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #92C7CF 0%, #AAD7D9 50%, #E5E1DA 100%);
-            padding: 20px;
-            z-index: 9000;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-
-        .login-card {
-            background: #fff;
-            border-radius: 24px;
-            padding: 0;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 8px 40px rgba(146, 199, 207, 0.35);
-            overflow: hidden;
-        }
-
-        .login-card .auth-tab {
-            flex: 1;
-            padding: 16px;
-            border: none;
-            background: none;
-            font-family: 'Mitr', sans-serif;
-            font-size: 0.95rem;
+        .datatable-header h2 {
+            font-size: 1.1rem;
             font-weight: 600;
-            color: var(--primary);
-            cursor: pointer;
-            border-bottom: 3px solid var(--primary);
-            transition: all 0.2s;
-        }
-
-        .login-card .auth-tab.inactive {
-            color: #999;
-            border-bottom: 3px solid transparent;
-            font-weight: 400;
-        }
-
-        .login-header {
-            text-align: center;
-            padding: 28px 24px 16px;
-        }
-
-        .login-header .login-logo {
-            font-size: 3rem;
-            margin-bottom: 8px;
-        }
-
-        .login-header h2 {
-            font-size: 1.3rem;
-            font-weight: 700;
             color: var(--dark);
-            margin-bottom: 4px;
         }
-
-        .login-header p {
+        .datatable-search {
+            padding: 8px 14px;
+            border: 2px solid var(--gray);
+            border-radius: 10px;
+            font-family: 'Mitr', sans-serif;
             font-size: 0.85rem;
-            color: #888;
+            outline: none;
+            width: 260px;
+            transition: border-color 0.2s;
+        }
+        .datatable-search:focus {
+            border-color: var(--primary);
+        }
+        .datatable-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .datatable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            background: #fff;
+        }
+        .datatable thead th {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 500;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .datatable tbody td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--gray);
+            white-space: nowrap;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .datatable tbody tr:hover {
+            background: #f0f7f8;
+        }
+        .datatable tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+        .datatable tbody tr:nth-child(even):hover {
+            background: #f0f7f8;
+        }
+        .datatable-count {
+            font-size: 0.78rem;
+            color: var(--dark);
+            margin-top: 10px;
+            text-align: right;
+        }
+        .datatable-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+        .datatable-empty .emoji {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 8px;
         }
 
         /* ===== DASHBOARD VIEW ===== */
@@ -1660,35 +1681,6 @@
             border-color: #fff;
         }
 
-        .header-user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .header-user-name {
-            color: #fff;
-            font-size: 0.82rem;
-        }
-
-        .header-logout-btn {
-            padding: 4px 10px;
-            font-size: 0.75rem;
-            border-color: rgba(255,255,255,0.6);
-            color: #fff;
-            background: transparent;
-            border: 2px solid;
-            border-radius: 8px;
-            font-family: 'Mitr', sans-serif;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .header-logout-btn:hover {
-            background: rgba(255,255,255,0.2);
-            border-color: #fff;
-        }
-
         @media (max-width: 600px) {
             .dashboard-stats {
                 grid-template-columns: repeat(2, 1fr);
@@ -1706,237 +1698,140 @@
     </style>
 </head>
 <body>
-
-    <!-- HEADER -->
-    <header class="header" id="mainHeader">
-        <div class="header-title">
-            <span class="emoji">🗺️</span>
-            <h1>ระบบปักหมุด - จัดการจุดรับสาย</h1>
-        </div>
-        <div class="header-nav" id="headerNav">
-            <!-- Dynamic content based on auth state -->
-        </div>
-    </header>
-
-    <!-- MAIN VIEW (Data Management) -->
-    <div id="mainView" class="view-section">
-        <!-- LOADING -->
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="spinner"></div>
-            <span style="font-size:0.9rem; color:var(--dark);">กำลังโหลดข้อมูล...</span>
-        </div>
-
-        <!-- TOAST CONTAINER -->
-        <div class="toast-container" id="toastContainer"></div>
-
-        <!-- Back button + container -->
-        <div class="container" style="padding-top:8px;">
-            <button class="back-btn" id="mainBackBtn">← กลับหน้าหลัก</button>
-
-            <!-- DATA LIST -->
-            <div class="data-section" style="margin-top:0;">
-                <h2>📋 รายการจุดทั้งหมด</h2>
-
-                <div class="filter-bar">
-                    <input type="text" id="searchInput" placeholder="🔍 ค้นหา...">
-                    <input type="date" id="filterDate" title="กรองตามวันที่">
-                    <select id="filterStatus">
-                        <option value="">ทุกสถานะ</option>
-                        <option value="รอดำเนินการ">⏳ รอดำเนินการ</option>
-                        <option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
-                        <option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
-                    </select>
-                    <button class="view-toggle-btn active" id="viewCardBtn" title="แสดงแบบการ์ด">📇</button>
-                    <button class="view-toggle-btn" id="viewTableBtn" title="แสดงแบบตาราง">📊</button>
-                </div>
-
-                <div id="dataList"></div>
-            </div>
-        </div>
-
-        <!-- FLOATING MAP -->
-        <div class="floating-map" id="floatingMap">
-            <button class="map-toggle-btn" id="mapToggleBtn">⛶</button>
-            <div id="miniMap"></div>
-        </div>
-
-        <!-- DETAIL MODAL -->
-        <div class="modal-overlay" id="detailModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>📍 รายละเอียดจุดรับสาย</h3>
-                    <button class="modal-close" id="modalClose">✕</button>
-                </div>
-
-                <div id="modalBody">
-                    <!-- Distance -->
-                    <div class="distance-display" id="distanceDisplay">
-                        <div class="number" id="distanceValue">--</div>
-                        <div class="unit">เมตรจากตำแหน่งปัจจุบัน</div>
-                    </div>
-
-                    <!-- Navigate Button -->
-                    <button class="navigate-btn" id="navigateBtn">
-                        🧭 นำทางไปยังจุดหมาย
-                    </button>
-
-                    <!-- Modal Map -->
-                    <div class="modal-map" id="modalMap"></div>
-
-                    <!-- Detail Grid -->
-                    <div class="detail-grid" id="detailGrid"></div>
-
-                    <!-- Images -->
-                    <div id="modalImages"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- IMAGE MODAL -->
-        <div class="image-modal" id="imageModal">
-            <button class="image-modal-close" id="imageModalClose">✕</button>
-            <img src="" alt="Preview" id="imageModalImg">
-        </div>
-
-        <!-- FOOTER -->
-        <footer class="footer">
-            © 2025 อ.เอ เออเอ — ระบบปักหมุดจัดการจุดรับสาย
-        </footer>
-    </div>
-
-    <!-- LOGIN VIEW -->
-    <div id="loginView" class="view-section login-view">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-logo">🗺️</div>
-                <h2>ระบบปักหมุด - จัดการจุดรับสาย</h2>
-                <p>กรุณาเข้าสู่ระบบเพื่อใช้งาน</p>
-            </div>
-            <div style="display:flex; border-bottom:2px solid var(--gray);">
-                <button class="auth-tab" id="tabLogin">🔑 เข้าสู่ระบบ</button>
-                <button class="auth-tab inactive" id="tabRegister">📝 สมัครสมาชิก</button>
-            </div>
-            <div id="loginForm" style="padding:24px;">
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label>ชื่อผู้ใช้</label>
-                    <input type="text" id="loginUsername" placeholder="กรอกชื่อผู้ใช้..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label>รหัสผ่าน</label>
-                    <input type="password" id="loginPassword" placeholder="กรอกรหัสผ่าน..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <button class="btn btn-primary" style="width:100%; justify-content:center; padding:12px;" id="btnLoginSubmit">🔑 เข้าสู่ระบบ</button>
-                <div id="loginError" style="color:var(--danger); font-size:0.82rem; margin-top:10px; text-align:center; display:none;"></div>
-            </div>
-            <div id="registerForm" style="padding:24px; display:none;">
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label>ชื่อ-นามสกุล</label>
-                    <input type="text" id="regFullname" placeholder="กรอกชื่อ-นามสกุล..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label>ชื่อผู้ใช้</label>
-                    <input type="text" id="regUsername" placeholder="ตั้งชื่อผู้ใช้..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label>รหัสผ่าน</label>
-                    <input type="password" id="regPassword" placeholder="ตั้งรหัสผ่าน (อย่างน้อย 4 ตัว)..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <button class="btn btn-success" style="width:100%; justify-content:center; padding:12px;" id="btnRegisterSubmit">📝 สมัครสมาชิก</button>
-                <div id="regError" style="color:var(--danger); font-size:0.82rem; margin-top:10px; text-align:center; display:none;"></div>
-                <div id="regSuccess" style="color:var(--success); font-size:0.82rem; margin-top:10px; text-align:center; display:none;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- DASHBOARD VIEW -->
-    <div id="dashboardView" class="view-section dashboard-view">
-        <div class="dashboard-welcome">
-            <h2 id="dashWelcome">สวัสดี 👋</h2>
-            <p>เลือกเมนูด้านล่างเพื่อเริ่มต้นใช้งาน</p>
-        </div>
-        <div class="dashboard-stats" id="dashboardStats">
-            <div class="stat-card stat-total">
-                <div class="stat-number" id="statTotal">0</div>
-                <div class="stat-label">ทั้งหมด</div>
-            </div>
-            <div class="stat-card stat-pending">
-                <div class="stat-number" id="statPending">0</div>
-                <div class="stat-label">⏳ รอดำเนินการ</div>
-            </div>
-            <div class="stat-card stat-progress">
-                <div class="stat-number" id="statProgress">0</div>
-                <div class="stat-label">🔄 กำลังดำเนินการ</div>
-            </div>
-            <div class="stat-card stat-done">
-                <div class="stat-number" id="statDone">0</div>
-                <div class="stat-label">✅ เสร็จสิ้น</div>
-            </div>
-        </div>
-        <div class="dashboard-cards">
-            <div class="dashboard-card" id="dashCardMain">
-                <div class="card-icon">📍</div>
-                <div class="card-title">บันทึกข้อมูลจุดรับสาย</div>
-                <div class="card-desc">ดูรายการจุดรับสายทั้งหมด ค้นหา กรอง และจัดการสถานะ</div>
-            </div>
-            <div class="dashboard-card" id="dashCardAddLine">
-                <div class="card-icon">🔌</div>
-                <div class="card-title">เพิ่มสายจากผู้ใช้งาน</div>
-                <div class="card-desc">เพิ่มข้อมูลสายใหม่เข้าสู่ระบบ</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ADD LINE VIEW -->
-    <div id="addLineView" class="view-section addline-view">
-        <button class="back-btn" id="addLineBackBtn">← กลับหน้าหลัก</button>
-        <div class="addline-form-card">
-            <h2 style="font-size:1.1rem; font-weight:600; color:var(--dark); margin-bottom:16px;">🔌 เพิ่มสายจากผู้ใช้</h2>
-            <form id="addLineFormView">
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label>ชื่อสาย <span class="required">*</span></label>
-                    <input type="text" id="lineNameView" placeholder="เช่น สาย 1 - หน่วย ก" required style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label>หมวด</label>
-                    <input type="text" id="lineCategoryView" placeholder="เช่น A, B, C" style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label>ตำบล</label>
-                    <input type="text" id="lineTambonView" placeholder="ระบุตำบล..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label>หมู่บ้าน</label>
-                    <input type="text" id="lineVillageView" placeholder="ระบุหมู่บ้าน..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <div class="form-group" style="margin-bottom:14px;">
-                    <label>พิกัด</label>
-                    <input type="text" id="lineCoordsView" placeholder="เช่น 13.7563, 100.5018" style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none;">
-                </div>
-                <div class="form-group" style="margin-bottom:16px;">
-                    <label>หมายเหตุ</label>
-                    <textarea id="lineNoteView" placeholder="ระบุหมายเหตุ..." style="width:100%; padding:10px 14px; border:2px solid var(--gray); border-radius:10px; font-family:'Mitr'; font-size:0.9rem; outline:none; min-height:60px; resize:vertical;"></textarea>
-                </div>
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">💾 เพิ่มสาย</button>
-                    <button type="button" class="btn btn-outline" id="btnClearAddLineView">🗑️ ล้างฟอร์ม</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- SCRIPTS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuidv4.min.js"></script>
-
-    <script>
+<!-- HEADER --><header class="header" id="mainHeader">
+<div class="header-title"><span class="emoji">🗺️</span>
+<h1>ระบบปักหมุด - จัดการจุดรับสาย</h1>
+</div>
+<div class="header-nav" id="headerNav"></div>
+</header><!-- MAIN VIEW (Data Management) -->
+<div id="mainView" class="view-section"><!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+<div class="spinner"></div>
+<span style="font-size: 0.9rem; color: var(--dark);">กำลังโหลดข้อมูล...</span></div>
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+<!-- Back button + container -->
+<div class="container" style="padding-top: 8px;"><button class="back-btn" id="mainBackBtn">← กลับหน้าหลัก</button> <!-- DATA LIST -->
+<div class="data-section" style="margin-top: 0;">
+<h2>📋 รายการจุดทั้งหมด</h2>
+<div class="filter-bar"><input type="text" id="searchInput" placeholder="🔍 ค้นหา..." /> <input type="date" id="filterDate" title="กรองตามวันที่" /><select id="filterStatus">
+<option value="">ทุกสถานะ</option>
+<option value="รอดำเนินการ">⏳ รอดำเนินการ</option>
+<option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
+<option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
+</select><button class="view-toggle-btn active" id="viewCardBtn" title="แสดงแบบการ์ด">📇</button> <button class="view-toggle-btn" id="viewTableBtn" title="แสดงแบบตาราง">📊</button></div>
+<div id="dataList"></div>
+</div>
+</div>
+<!-- FLOATING MAP -->
+<div class="floating-map" id="floatingMap"><button class="map-toggle-btn" id="mapToggleBtn">⛶</button>
+<div id="miniMap"></div>
+</div>
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+<div class="modal-content">
+<div class="modal-header">
+<h3>📍 รายละเอียดจุดรับสาย</h3>
+<button class="modal-close" id="modalClose">✕</button></div>
+<div id="modalBody"><!-- Distance -->
+<div class="distance-display" id="distanceDisplay">
+<div class="number" id="distanceValue">--</div>
+<div class="unit">เมตรจากตำแหน่งปัจจุบัน</div>
+</div>
+<!-- Navigate Button --> <button class="navigate-btn" id="navigateBtn"> 🧭 นำทางไปยังจุดหมาย </button> <!-- Modal Map -->
+<div class="modal-map" id="modalMap"></div>
+<!-- Detail Grid -->
+<div class="detail-grid" id="detailGrid"></div>
+<!-- Images -->
+<div id="modalImages"></div>
+</div>
+</div>
+</div>
+<!-- IMAGE MODAL -->
+<div class="image-modal" id="imageModal"><button class="image-modal-close" id="imageModalClose">✕</button> <img alt="Preview" id="imageModalImg" /></div>
+<!-- FOOTER --><footer class="footer">© 2025 อ.เอ เออเอ — ระบบปักหมุดจัดการจุดรับสาย</footer></div>
+<!-- DASHBOARD VIEW -->
+<div id="dashboardView" class="view-section dashboard-view">
+<div class="dashboard-welcome">
+<h2 id="dashWelcome">สวัสดี 👋</h2>
+<p>เลือกเมนูด้านล่างเพื่อเริ่มต้นใช้งาน</p>
+</div>
+<div class="dashboard-stats" id="dashboardStats">
+<div class="stat-card stat-total">
+<div class="stat-number" id="statTotal">0</div>
+<div class="stat-label">ทั้งหมด</div>
+</div>
+<div class="stat-card stat-pending">
+<div class="stat-number" id="statPending">0</div>
+<div class="stat-label">⏳ รอดำเนินการ</div>
+</div>
+<div class="stat-card stat-progress">
+<div class="stat-number" id="statProgress">0</div>
+<div class="stat-label">🔄 กำลังดำเนินการ</div>
+</div>
+<div class="stat-card stat-done">
+<div class="stat-number" id="statDone">0</div>
+<div class="stat-label">✅ เสร็จสิ้น</div>
+</div>
+</div>
+<div class="dashboard-cards">
+<div class="dashboard-card" id="dashCardMain">
+<div class="card-icon">📍</div>
+<div class="card-title">บันทึกข้อมูลจุดรับสาย</div>
+<div class="card-desc">ดูรายการจุดรับสายทั้งหมด ค้นหา กรอง และจัดการสถานะ</div>
+</div>
+<div class="dashboard-card" id="dashCardAddLine">
+<div class="card-icon">🔌</div>
+<div class="card-title">เพิ่มสายจากผู้ใช้งาน</div>
+<div class="card-desc">เพิ่มข้อมูลสายใหม่เข้าสู่ระบบ</div>
+</div>
+<div class="dashboard-card" id="dashCardDataTable">
+<div class="card-icon">📊</div>
+<div class="card-title">แผ่นข้อมูล (DATA)</div>
+<div class="card-desc">ดูข้อมูลแผ่นงานทั้งหมดจากฐานข้อมูล</div>
+</div>
+</div>
+</div>
+<!-- ADD LINE VIEW -->
+<div id="addLineView" class="view-section addline-view"><button class="back-btn" id="addLineBackBtn">← กลับหน้าหลัก</button>
+<div class="addline-form-card">
+<h2 style="font-size: 1.1rem; font-weight: 600; color: var(--dark); margin-bottom: 16px;">🔌 เพิ่มสายจากผู้ใช้</h2>
+<form id="addLineFormView">
+<div class="form-group" style="margin-bottom: 14px;"><label>ชื่อสาย <span class="required">*</span></label> <input type="text" id="lineNameView" placeholder="เช่น สาย 1 - หน่วย ก" required="" style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
+<div class="form-group" style="margin-bottom: 14px;"><label>หมวด</label> <input type="text" id="lineCategoryView" placeholder="เช่น A, B, C" style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
+<div class="form-group" style="margin-bottom: 14px;"><label>ตำบล</label> <input type="text" id="lineTambonView" placeholder="ระบุตำบล..." style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
+<div class="form-group" style="margin-bottom: 14px;"><label>หมู่บ้าน</label> <input type="text" id="lineVillageView" placeholder="ระบุหมู่บ้าน..." style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
+<div class="form-group" style="margin-bottom: 14px;"><label>พิกัด</label> <input type="text" id="lineCoordsView" placeholder="เช่น 13.7563, 100.5018" style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
+<div class="form-group" style="margin-bottom: 16px;"><label>หมายเหตุ</label> <textarea id="lineNoteView" placeholder="ระบุหมายเหตุ..." style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none; min-height: 60px; resize: vertical;"></textarea></div>
+<div class="btn-group"><button type="submit" class="btn btn-primary">💾 เพิ่มสาย</button> <button type="button" class="btn btn-outline" id="btnClearAddLineView">🗑️ ล้างฟอร์ม</button></div>
+</form></div>
+</div>
+<!-- DATA TABLE VIEW (ข้อมูลจากตาราง DATA) -->
+<div id="dataTableView" class="view-section">
+<div class="datatable-view">
+<div class="datatable-header">
+<h2>📊 แผ่นข้อมูล (DATA)</h2>
+<input type="text" class="datatable-search" id="dataTableSearch" placeholder="🔍 ค้นหาในแผ่นข้อมูล..." />
+</div>
+<div class="datatable-wrapper">
+<table class="datatable" id="dataTable">
+<thead id="dataTableHead"></thead>
+<tbody id="dataTableBody"></tbody>
+</table>
+</div>
+<div class="datatable-count" id="dataTableCount"></div>
+</div>
+</div>
+<!-- SCRIPTS -->
+<p>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuidv4.min.js"></script>
+<script>
 
         // ===== CONFIG =====
         const API_URL = 'https://postsit.byethost22.com/api.php'; // MyAdmin API
-        const AUTH_URL = API_URL.replace('api.php', 'auth.php');
-        // Google Sheet — ใช้เฉพาะสำหรับ autocomplete suggestions (tab DATA)
-        const SHEET_ID = '1ZQla4tHCc9VXUswa3Jd-Rg4WJ4qE6S5rz8Aral61H90';
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxlBqUNGdPjLut9Ilm5ugkSou8U9J6H6V2tfC4qSUTe9wXdzwr6tx_-iJB-BCWrYqTmA/exec';
+        // ข้อมูลทั้งหมดดึงจาก SQL (ตาราง cable_points) ผ่าน api.php
 
         // ===== STATE =====
         let allData = [];
@@ -1948,9 +1843,10 @@
         let modalMarker = null;
         let currentDetailItem = null;
         let userLocation = null;
-        let appView = 'login'; // login | dashboard | main | addLine
-        let currentUser = null;
+        let appView = 'main'; // dashboard | main | addLine | dataTable
         let dataLoaded = false;
+        let dataTableData = [];
+        let dataTableFiltered = [];
 
         // ===== VIEW ROUTING =====
         function showView(view) {
@@ -1961,42 +1857,36 @@
             if (target) target.classList.add('active');
             appView = view;
             window.scrollTo(0, 0);
-            // Hide header on login view, show on others
+            // Always show header
             const header = document.getElementById('mainHeader');
             if (header) {
-                header.style.display = (view === 'login') ? 'none' : 'flex';
+                header.style.display = 'flex';
             }
             updateHeaderNav();
             if (view === 'dashboard') {
                 updateDashboardStats();
             }
+            if (view === 'dataTable') {
+                loadDataTable();
+            }
         }
 
         function updateHeaderNav() {
             const nav = document.getElementById('headerNav');
-            const token = localStorage.getItem('auth_token');
-            const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
-            if (token && user.fullname) {
-                currentUser = user;
-                let navHtml = '';
-                if (appView !== 'dashboard') {
-                    navHtml += `<button class="header-nav-btn" onclick="showView('dashboard')">🏠 หน้าหลัก</button>`;
-                }
-                if (appView !== 'main') {
-                    navHtml += `<button class="header-nav-btn" onclick="showView('main')">📍 จุดรับสาย</button>`;
-                }
-                if (appView !== 'addLine') {
-                    navHtml += `<button class="header-nav-btn" onclick="showView('addLine')">🔌 เพิ่มสาย</button>`;
-                }
-                navHtml += `<div class="header-user-info">`;
-                navHtml += `<span class="header-user-name">👤 ${user.fullname}</span>`;
-                navHtml += `<button class="header-logout-btn" onclick="handleLogout()">ออก</button>`;
-                navHtml += `</div>`;
-                nav.innerHTML = navHtml;
-            } else {
-                currentUser = null;
-                nav.innerHTML = '';
+            let navHtml = '';
+            if (appView !== 'dashboard') {
+                navHtml += `<button class="header-nav-btn" onclick="showView('dashboard')">🏠 หน้าหลัก</button>`;
             }
+            if (appView !== 'main') {
+                navHtml += `<button class="header-nav-btn" onclick="showView('main')">📍 จุดรับสาย</button>`;
+            }
+            if (appView !== 'addLine') {
+                navHtml += `<button class="header-nav-btn" onclick="showView('addLine')">🔌 เพิ่มสาย</button>`;
+            }
+            if (appView !== 'dataTable') {
+                navHtml += `<button class="header-nav-btn" onclick="showView('dataTable')">📊 แผ่นข้อมูล</button>`;
+            }
+            nav.innerHTML = navHtml;
         }
 
         function updateDashboardStats() {
@@ -2010,118 +1900,14 @@
             document.getElementById('statDone').textContent = done;
         }
 
-        // ===== AUTH FUNCTIONS =====
-
-        function switchAuthTab(tab) {
-            const tabLogin = document.getElementById('tabLogin');
-            const tabRegister = document.getElementById('tabRegister');
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            if (tab === 'login') {
-                tabLogin.classList.remove('inactive');
-                tabRegister.classList.add('inactive');
-                loginForm.style.display = 'block';
-                registerForm.style.display = 'none';
-            } else {
-                tabRegister.classList.remove('inactive');
-                tabLogin.classList.add('inactive');
-                registerForm.style.display = 'block';
-                loginForm.style.display = 'none';
-            }
-        }
-
-        async function handleLogin() {
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
-            const errEl = document.getElementById('loginError');
-            errEl.style.display = 'none';
-            if (!username || !password) { errEl.textContent = 'กรุณากรอกข้อมูลให้ครบ'; errEl.style.display = 'block'; return; }
-            try {
-                const loginUrl = AUTH_URL + '?action=login';
-                const resp = await fetch(loginUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
-                const text = await resp.text();
-                const result = JSON.parse(text);
-                if (!result.success) { errEl.textContent = result.error; errEl.style.display = 'block'; return; }
-                localStorage.setItem('auth_token', result.token);
-                localStorage.setItem('auth_user', JSON.stringify(result.user));
-                currentUser = result.user;
-                await loadData();
-                showView('main');
-                Swal.fire({ icon: 'success', title: 'ยินดีต้อนรับ!', text: `สวัสดี ${result.user.fullname}`, confirmButtonColor: '#92C7CF', timer: 2000 });
-            } catch (e) { errEl.textContent = 'เกิดข้อผิดพลาด: ' + e.message; errEl.style.display = 'block'; }
-        }
-
-        async function handleRegister() {
-            const fullname = document.getElementById('regFullname').value.trim();
-            const username = document.getElementById('regUsername').value.trim();
-            const password = document.getElementById('regPassword').value.trim();
-            const errEl = document.getElementById('regError');
-            const sucEl = document.getElementById('regSuccess');
-            errEl.style.display = 'none'; sucEl.style.display = 'none';
-            if (!fullname || !username || !password) { errEl.textContent = 'กรุณากรอกข้อมูลให้ครบ'; errEl.style.display = 'block'; return; }
-            try {
-                const resp = await fetch(AUTH_URL + '?action=register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullname, username, password }) });
-                const result = await resp.json();
-                if (!result.success) { errEl.textContent = result.error; errEl.style.display = 'block'; return; }
-                sucEl.textContent = '✅ สมัครสำเร็จ! กรุณาเข้าสู่ระบบ';
-                sucEl.style.display = 'block';
-                document.getElementById('regFullname').value = '';
-                document.getElementById('regUsername').value = '';
-                document.getElementById('regPassword').value = '';
-                setTimeout(() => switchAuthTab('login'), 1500);
-            } catch (e) { errEl.textContent = 'เกิดข้อผิดพลาด: ' + e.message; errEl.style.display = 'block'; }
-        }
-
-        async function handleLogout() {
-            const token = localStorage.getItem('auth_token');
-            const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
-            if (token && user.id) {
-                try {
-                    await fetch(AUTH_URL + '?action=logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: user.id }) });
-                } catch (e) { }
-            }
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_user');
-            currentUser = null;
-            dataLoaded = false;
-            allData = [];
-            showView('login');
-            Swal.fire({ icon: 'info', title: 'ออกจากระบบแล้ว', confirmButtonColor: '#92C7CF', timer: 1500 });
-        }
-
-        // Auto-check session on load
-        async function checkSession() {
-            const token = localStorage.getItem('auth_token');
-            if (!token) {
-                showView('login');
-                return;
-            }
-            try {
-                const resp = await fetch(AUTH_URL + '?action=checkSession&token=' + token);
-                const result = await resp.json();
-                if (result.success) {
-                    localStorage.setItem('auth_user', JSON.stringify(result.user));
-                    currentUser = result.user;
-                    await loadData();
-                    document.getElementById('dashWelcome').textContent = `สวัสดี, ${result.user.fullname} 👋`;
-                    showView('main');
-                } else {
-                    localStorage.removeItem('auth_token');
-                    localStorage.removeItem('auth_user');
-                    showView('login');
-                }
-            } catch (e) {
-                showView('login');
-            }
-        }
-
         // ===== INIT =====
         document.addEventListener('DOMContentLoaded', function() {
             initDate();
+            showView('main');
             initMaps();
             initEventListeners();
             getUserLocation();
-            checkSession();
+            loadData();
         });
 
         function initDate() {
@@ -2283,36 +2069,7 @@
             }, 300);
         }
 
-        // ===== GOOGLE SHEET JSONP (สำหรับ autocomplete จาก tab DATA เท่าน้ัน) =====
-        function jsonpRequest(params) {
-            return new Promise((resolve, reject) => {
-                const callbackName = 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                const script = document.createElement('script');
-                const timeout = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout — ตรวจสอบ SCRIPT_URL')); }, 15000);
-                function cleanup() {
-                    if (script.parentNode) script.parentNode.removeChild(script);
-                    delete window[callbackName];
-                    clearTimeout(timeout);
-                }
-                window[callbackName] = function(data) {
-                    cleanup();
-                    console.log('JSONP response:', data);
-                    if (data && data.error) {
-                        reject(new Error(data.error));
-                    } else {
-                        resolve(data);
-                    }
-                };
-                params.callback = callbackName;
-                const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-                console.log('JSONP request URL:', url);
-                script.onerror = () => { cleanup(); reject(new Error('JSONP load error — ไม่สามารถเข้าถึง Google Script ได้')); };
-                script.src = url;
-                document.head.appendChild(script);
-            });
-        }
-
-        // ===== AUTO-FILL FIELDS FROM DATA TAB =====
+        // ===== AUTO-FILL FIELDS FROM SQL DATA =====
         // Mapping: DATA tab column → form input id
         const FIELD_MAP = {
             'หมวด': 'inputCategory',
@@ -2332,7 +2089,9 @@
             'หมู่': 'inputVillage',
             'คำแนะนำ': 'inputRunAdvice',
             'พิกัด': 'inputCoords',
-            'lat': null,  // ถ้ามี column lat/lng แยก
+            'สถาณะ': 'inputStatus',
+            'status': 'inputStatus',
+            'lat': null,
             'lng': null,
             'latitude': null,
             'longitude': null,
@@ -2400,40 +2159,42 @@
                 console.log('Response data:', result);
 
                 if (result.success && result.data && result.data.length > 0) {
-                    allData = result.data.map(row => ({
-                        id: row.id || '',
-                        วันที่: row.date || '',
-                        หมวด: row.category || '',
-                        สายจดหน่วย: row.line_unit || '',
-                        ตำบล: row.tambon || '',
-                        พื้นที่ทำงาน: row.work_area || '',
-                        หมู่บ้าน: row.village || '',
-                        หมายเหตุ: row.note || '',
-                        STATUS: row.status || 'รอดำเนินการ',
-                        คำแนะนำการวิ่ง: row.run_advice || '',
-                        พิกัดต้นสาย: row.coords || '',
-                        lat: row.lat || null,
-                        lng: row.lng || null,
-                        images: row.images ? JSON.parse(row.images) : []
-                    }));
+                    allData = result.data.map(row => {
+                        let images = [];
+                        try { images = row.images ? JSON.parse(row.images) : []; } catch(e) { images = []; }
+                        return {
+                            id: row.id || '',
+                            วันที่: row.date || '',
+                            หมวด: row.category || '',
+                            สายจดหน่วย: row.line_unit || '',
+                            ตำบล: row.tambon || '',
+                            พื้นที่ทำงาน: row.work_area || '',
+                            หมู่บ้าน: row.village || '',
+                            หมายเหตุ: row.note || '',
+                            STATUS: row.status || 'รอดำเนินการ',
+                            คำแนะนำการวิ่ง: row.run_advice || '',
+                            พิกัดต้นสาย: row.coords || '',
+                            lat: row.lat || null,
+                            lng: row.lng || null,
+                            images: images
+                        };
+                    });
 
-                    // Load suggestions จาก MyAdmin data
-                    lineUnitSuggestions = [...new Set(allData.map(d => d.สายจดหน่วย).filter(Boolean))];
-                    console.log('Suggestions from MyAdmin:', lineUnitSuggestions.length, lineUnitSuggestions.slice(0, 5));
-
-                    // เพิ่ม suggestions จาก Google Sheet tab DATA
+                    // Load suggestions จากตาราง DATA
                     try {
-                        const sugResult = await jsonpRequest({ action: 'getSuggestions' });
-                        console.log('Google Sheet suggestions result:', sugResult);
-                        if (sugResult.suggestions && sugResult.suggestions.length > 0) {
-                            const merged = [...new Set([...lineUnitSuggestions, ...sugResult.suggestions])];
-                            lineUnitSuggestions = merged;
-                            console.log('Merged suggestions:', merged.length, merged.slice(0, 5));
+                        const sugResp = await fetch(API_URL + '?action=getSuggestions');
+                        const sugResult = await sugResp.json();
+                        if (sugResult.success && Array.isArray(sugResult.suggestions)) {
+                            lineUnitSuggestions = sugResult.suggestions;
                         }
                     } catch (sugErr) {
-                        console.warn('Could not load Sheet suggestions:', sugErr.message);
+                        console.warn('Could not load DATA suggestions:', sugErr.message);
                     }
-                    console.log('Final lineUnitSuggestions:', lineUnitSuggestions.length);
+                    // Fallback: ถ้า suggestions ว่าง ใช้จาก cable_points
+                    if (lineUnitSuggestions.length === 0) {
+                        lineUnitSuggestions = [...new Set(allData.map(d => d.สายจดหน่วย).filter(Boolean))];
+                    }
+                    console.log('Suggestions:', lineUnitSuggestions.length);
                 } else {
                     console.warn('No data from API, using sample data. Result:', result);
                     allData = getSampleData();
@@ -2479,6 +2240,68 @@
                     พิกัดต้นสาย: '13.8000, 100.5400', images: []
                 }
             ];
+        }
+
+        // ===== DATA TABLE VIEW (ตาราง DATA) =====
+        async function loadDataTable() {
+            const tbody = document.getElementById('dataTableBody');
+            const thead = document.getElementById('dataTableHead');
+            tbody.innerHTML = '<tr><td colspan="9" class="datatable-empty"><span class="emoji">⏳</span>กำลังโหลดข้อมูล...</td></tr>';
+            try {
+                const resp = await fetch(API_URL + '?action=getDataTable');
+                const result = await resp.json();
+                if (result.success && result.data && result.data.length > 0) {
+                    dataTableData = result.data;
+                    dataTableFiltered = result.data;
+                    renderDataSheet();
+                } else {
+                    dataTableData = [];
+                    dataTableFiltered = [];
+                    thead.innerHTML = '';
+                    const msg = result.error ? 'ผิดพลาด: ' + result.error : 'ไม่พบข้อมูลในตาราง DATA';
+                    tbody.innerHTML = '<tr><td colspan="9" class="datatable-empty"><span class="emoji">📭</span>' + msg + '</td></tr>';
+                    document.getElementById('dataTableCount').textContent = '';
+                }
+            } catch (err) {
+                console.error('Error loading DATA table:', err);
+                dataTableData = [];
+                dataTableFiltered = [];
+                thead.innerHTML = '';
+                tbody.innerHTML = '<tr><td colspan="9" class="datatable-empty"><span class="emoji">⚠️</span>โหลดข้อมูลไม่สำเร็จ: ' + err.message + '</td></tr>';
+                document.getElementById('dataTableCount').textContent = '';
+            }
+        }
+
+        function renderDataSheet() {
+            const thead = document.getElementById('dataTableHead');
+            const tbody = document.getElementById('dataTableBody');
+            if (!dataTableFiltered || dataTableFiltered.length === 0) {
+                thead.innerHTML = '';
+                tbody.innerHTML = '<tr><td colspan="9" class="datatable-empty"><span class="emoji">🔍</span>ไม่พบข้อมูลที่ตรงกับการค้นหา</td></tr>';
+                document.getElementById('dataTableCount').textContent = '';
+                return;
+            }
+            const columns = Object.keys(dataTableFiltered[0]);
+            thead.innerHTML = '<tr>' + columns.map(col => '<th>' + col + '</th>').join('') + '</tr>';
+            tbody.innerHTML = dataTableFiltered.map(row => {
+                return '<tr>' + columns.map(col => {
+                    const val = row[col] != null ? String(row[col]) : '';
+                    return '<td title="' + val.replace(/"/g, '&quot;') + '">' + (val || '-') + '</td>';
+                }).join('') + '</tr>';
+            }).join('');
+            document.getElementById('dataTableCount').textContent = 'แสดง ' + dataTableFiltered.length + ' จาก ' + dataTableData.length + ' รายการ';
+        }
+
+        function filterDataTable() {
+            const q = document.getElementById('dataTableSearch').value.toLowerCase().trim();
+            if (!q) {
+                dataTableFiltered = dataTableData;
+            } else {
+                dataTableFiltered = dataTableData.filter(row =>
+                    Object.values(row).some(v => String(v).toLowerCase().includes(q))
+                );
+            }
+            renderDataSheet();
         }
 
         // ===== RENDER DATA LIST =====
@@ -3442,8 +3265,14 @@
                 };
                 showLoading(true);
                 try {
-                    const resp = await fetch(API_URL + '?action=append', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: formData }) });
-                    const result = await resp.json();
+                    const url = API_URL + '?action=append';
+                    console.log('Saving to:', url, formData);
+                    const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: formData }) });
+                    console.log('Save response status:', resp.status);
+                    const text = await resp.text();
+                    console.log('Save response text:', text);
+                    let result;
+                    try { result = JSON.parse(text); } catch (e) { throw new Error('API ตอบกลับไม่ใช่ JSON: ' + text.substring(0, 200)); }
                     if (!result.success) throw new Error(result.error || 'Save failed');
                     allData.unshift(formData);
                     renderDataList(allData);
@@ -3457,7 +3286,7 @@
                     Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ! 🎉', text: 'ข้อมูลถูกบันทึกเรียบร้อยแล้ว', confirmButtonColor: '#92C7CF', timer: 2500, timerProgressBar: true });
                 } catch (error) {
                     console.error('Save error:', error);
-                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่', confirmButtonColor: '#92C7CF' });
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่', confirmButtonColor: '#92C7CF' });
                 }
                 showLoading(false);
             });
@@ -3527,37 +3356,19 @@
                     suggestionsList.classList.remove('active');
                     console.log('Suggestion clicked:', selectedLine);
 
-                    // ลองดึงจาก Google Sheet ก่อน
+                    // หาข้อมูลจากตาราง DATA
                     try {
-                        const result = await jsonpRequest({ action: 'getLineData', line: selectedLine });
-                        console.log('getLineData result:', result);
-                        if (result.found && result.data && Object.keys(result.data).length > 0) {
+                        const resp = await fetch(API_URL + '?action=getLineData&line=' + encodeURIComponent(selectedLine));
+                        const result = await resp.json();
+                        if (result.success && result.found && result.data) {
                             autoFillFields(result.data);
-                            showToast('✅ เติมข้อมูลอัตโนมัติแล้ว: ' + Object.keys(result.data).length + ' ฟิลด์', 'success');
-                            return;
+                            showToast('✅ เติมข้อมูลอัตโนมัติแล้ว', 'success');
+                        } else {
+                            showToast('⚠️ ไม่พบข้อมูลเพิ่มเติมสำหรับสายนี้', 'info');
                         }
                     } catch (err) {
-                        console.warn('Google Sheet auto-fill failed:', err.message);
-                    }
-
-                    // Fallback: หาข้อมูลจาก local data (MyAdmin)
-                    const localItem = allData.find(d => d.สายจดหน่วย === selectedLine);
-                    if (localItem) {
-                        const localData = {
-                            'หมวด': localItem.หมวด || '',
-                            'สายจดหน่วย': localItem.สายจดหน่วย || '',
-                            'ตำบล': localItem.ตำบล || '',
-                            'พื้นที่ทำงาน': localItem.พื้นที่ทำงาน || '',
-                            'หมู่บ้าน': localItem.หมู่บ้าน || '',
-                            'หมายเหตุ': localItem.หมายเหตุ || '',
-                            'STATUS': localItem.STATUS || '',
-                            'คำแนะนำการวิ่ง': localItem.คำแนะนำการวิ่ง || '',
-                            'พิกัดต้นสาย': localItem.พิกัดต้นสาย || '',
-                        };
-                        autoFillFields(localData);
-                        showToast('✅ เติมข้อมูลจากรายการที่มีอยู่แล้ว', 'success');
-                    } else {
-                        showToast('⚠️ ไม่พบข้อมูลเพิ่มเติมสำหรับสายนี้', 'info');
+                        console.warn('DATA auto-fill failed:', err.message);
+                        showToast('⚠️ ไม่สามารถดึงข้อมูลได้', 'error');
                     }
                 }
             });
@@ -3620,7 +3431,6 @@
             // ===== ADD LINE VIEW FORM =====
             document.getElementById('addLineFormView').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const user = JSON.parse(localStorage.getItem('auth_user') || '{}');
                 const lineData = {
                     id: Date.now().toString(),
                     วันที่: new Date().toISOString().split('T')[0],
@@ -3631,7 +3441,7 @@
                     พิกัดต้นสาย: document.getElementById('lineCoordsView').value.trim(),
                     หมายเหตุ: document.getElementById('lineNoteView').value.trim(),
                     STATUS: 'รอดำเนินการ',
-                    added_by: user.fullname || user.username || 'ไม่ระบุ',
+                    added_by: 'ไม่ระบุ',
                     images: []
                 };
                 console.log('Saving line:', lineData);
@@ -3688,15 +3498,10 @@
                 }
             });
 
-            // ===== LOGIN VIEW EVENTS =====
-            document.getElementById('tabLogin').addEventListener('click', function() { switchAuthTab('login'); });
-            document.getElementById('tabRegister').addEventListener('click', function() { switchAuthTab('register'); });
-            document.getElementById('btnLoginSubmit').addEventListener('click', handleLogin);
-            document.getElementById('btnRegisterSubmit').addEventListener('click', handleRegister);
-
             // ===== DASHBOARD VIEW EVENTS =====
             document.getElementById('dashCardMain').addEventListener('click', function() { showView('main'); });
             document.getElementById('dashCardAddLine').addEventListener('click', function() { showView('addLine'); });
+            document.getElementById('dashCardDataTable').addEventListener('click', function() { showView('dataTable'); });
 
             // ===== ADD LINE VIEW EVENTS =====
             document.getElementById('addLineBackBtn').addEventListener('click', function() { showView('dashboard'); });
@@ -3704,87 +3509,51 @@
 
             // ===== MAIN VIEW BACK BUTTON =====
             document.getElementById('mainBackBtn').addEventListener('click', function() { showView('dashboard'); });
+
+            // ===== DATA TABLE VIEW EVENTS =====
+            document.getElementById('dataTableSearch').addEventListener('input', filterDataTable);
         }
 
     </script>
-
-    <!-- FAB BUTTON (inside mainView) -->
-    <button class="fab-btn" id="fabAddBtn" title="บันทึกข้อมูลจุดรับสาย">➕</button>
-
-    <!-- ADD FORM MODAL -->
-    <div class="modal-overlay" id="addModal">
-        <div class="modal-content" style="max-width:650px; max-height:90vh; border-radius:20px;">
-            <div class="modal-header">
-                <h3>📝 บันทึกข้อมูลจุดรับสาย</h3>
-                <button class="modal-close" id="addModalClose">✕</button>
-            </div>
-            <form id="dataForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>วันที่ <span class="required">*</span></label>
-                        <input type="date" id="inputDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label>หมวด</label>
-                        <input type="text" id="inputCategory" placeholder="ระบุหมวด...">
-                    </div>
-                    <div class="form-group" style="position:relative;">
-                        <label>สายจดหน่วย <span class="required">*</span></label>
-                        <input type="text" id="inputLineUnit" placeholder="พิมพ์เพื่อค้นหา..." autocomplete="off" required>
-                        <div class="suggestions-list" id="suggestionsList"></div>
-                    </div>
-                    <div class="form-group">
-                        <label>ตำบล</label>
-                        <input type="text" id="inputTambon" placeholder="ระบุตำบล...">
-                    </div>
-                    <div class="form-group">
-                        <label>พื้นที่ทำงาน</label>
-                        <input type="text" id="inputWorkArea" placeholder="ระบุพื้นที่ทำงาน...">
-                    </div>
-                    <div class="form-group">
-                        <label>หมู่บ้าน</label>
-                        <input type="text" id="inputVillage" placeholder="ระบุหมู่บ้าน...">
-                    </div>
-                    <div class="form-group full-width">
-                        <label>หมายเหตุ</label>
-                        <textarea id="inputNote" placeholder="ระบุหมายเหตุ..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>STATUS</label>
-                        <select id="inputStatus">
-                            <option value="รอดำเนินการ">⏳ รอดำเนินการ</option>
-                            <option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
-                            <option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>คำแนะนำการวิ่ง</label>
-                        <input type="text" id="inputRunAdvice" placeholder="คำแนะนำ...">
-                    </div>
-                    <div class="form-group full-width">
-                        <label>พิกัดต้นสาย</label>
-                        <div class="coord-input-group">
-                            <input type="text" id="inputCoords" placeholder="เช่น 13.7563, 100.5018" inputmode="decimal">
-                            <button type="button" class="coord-btn" id="btnGetLocation" title="รับพิกัดจาก GPS">📍 GPS</button>
-                        </div>
-                    </div>
-                    <div class="form-group full-width">
-                        <label>📷 แนบรูปภาพ</label>
-                        <div class="image-upload-area" id="imageUploadArea">
-                            <div class="upload-icon">📸</div>
-                            <p>คลิกเพื่อเลือกรูป หรือลากรูปมาวาง</p>
-                            <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
-                        </div>
-                        <div class="image-preview-grid" id="imagePreviewGrid"></div>
-                    </div>
-                </div>
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">💾 บันทึก</button>
-                    <button type="button" class="btn btn-outline" id="btnClearForm">🗑️ ล้างฟอร์ม</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+</p>
+<!-- FAB BUTTON (inside mainView) -->
+<p><button class="fab-btn" id="fabAddBtn" title="บันทึกข้อมูลจุดรับสาย">➕</button></p>
+<!-- ADD FORM MODAL -->
+<div class="modal-overlay" id="addModal">
+<div class="modal-content" style="max-width: 650px; max-height: 90vh; border-radius: 20px;">
+<div class="modal-header">
+<h3>📝 บันทึกข้อมูลจุดรับสาย</h3>
+<button class="modal-close" id="addModalClose">✕</button></div>
+<form id="dataForm">
+<div class="form-grid">
+<div class="form-group"><label>วันที่ <span class="required">*</span></label> <input type="date" id="inputDate" required="" /></div>
+<div class="form-group"><label>หมวด</label> <input type="text" id="inputCategory" placeholder="ระบุหมวด..." /></div>
+<div class="form-group" style="position: relative;"><label>สายจดหน่วย <span class="required">*</span></label> <input type="text" id="inputLineUnit" placeholder="พิมพ์เพื่อค้นหา..." autocomplete="off" required="" />
+<div class="suggestions-list" id="suggestionsList"></div>
+</div>
+<div class="form-group"><label>ตำบล</label> <input type="text" id="inputTambon" placeholder="ระบุตำบล..." /></div>
+<div class="form-group"><label>พื้นที่ทำงาน</label> <input type="text" id="inputWorkArea" placeholder="ระบุพื้นที่ทำงาน..." /></div>
+<div class="form-group"><label>หมู่บ้าน</label> <input type="text" id="inputVillage" placeholder="ระบุหมู่บ้าน..." /></div>
+<div class="form-group full-width"><label>หมายเหตุ</label> <textarea id="inputNote" placeholder="ระบุหมายเหตุ..."></textarea></div>
+<div class="form-group"><label>STATUS</label><select id="inputStatus">
+<option value="รอดำเนินการ">⏳ รอดำเนินการ</option>
+<option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
+<option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
+</select></div>
+<div class="form-group"><label>คำแนะนำการวิ่ง</label> <input type="text" id="inputRunAdvice" placeholder="คำแนะนำ..." /></div>
+<div class="form-group full-width"><label>พิกัดต้นสาย</label>
+<div class="coord-input-group"><input type="text" id="inputCoords" placeholder="เช่น 13.7563, 100.5018" inputmode="decimal" /> <button type="button" class="coord-btn" id="btnGetLocation" title="รับพิกัดจาก GPS">📍 GPS</button></div>
+</div>
+<div class="form-group full-width"><label>📷 แนบรูปภาพ</label>
+<div class="image-upload-area" id="imageUploadArea">
+<div class="upload-icon">📸</div>
+<p>คลิกเพื่อเลือกรูป หรือลากรูปมาวาง</p>
+<input type="file" id="imageInput" accept="image/*" multiple="multiple" style="display: none;" /></div>
+<div class="image-preview-grid" id="imagePreviewGrid"></div>
+</div>
+</div>
+<div class="btn-group"><button type="submit" class="btn btn-primary">💾 บันทึก</button> <button type="button" class="btn btn-outline" id="btnClearForm">🗑️ ล้างฟอร์ม</button></div>
+</form></div>
+</div>
 </body>
 </html>

@@ -32,11 +32,57 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $rows]);
         break;
 
-    // ===== GET SUGGESTIONS (autocomplete) =====
+    // ===== GET SUGGESTIONS (autocomplete) จากตาราง DATA =====
     case 'getSuggestions':
-        $stmt = $pdo->query("SELECT DISTINCT line_unit FROM cable_points WHERE line_unit IS NOT NULL AND line_unit != ''");
-        $suggestions = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        echo json_encode(['success' => true, 'suggestions' => $suggestions]);
+        try {
+            $stmt = $pdo->query("SELECT DISTINCT `สายจดหน่วย` FROM DATA WHERE `สายจดหน่วย` IS NOT NULL AND `สายจดหน่วย` != ''");
+            $suggestions = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            echo json_encode(['success' => true, 'suggestions' => $suggestions]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage(), 'suggestions' => []]);
+        }
+        break;
+
+    // ===== GET LINE DATA จากตาราง DATA (สำหรับ auto-fill) =====
+    case 'getLineData':
+        $line = $_GET['line'] ?? '';
+        if (!$line) {
+            echo json_encode(['success' => false, 'found' => false, 'error' => 'Missing line']);
+            exit;
+        }
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM DATA WHERE `สายจดหน่วย` = ? LIMIT 1");
+            $stmt->execute([$line]);
+            $row = $stmt->fetch();
+            if ($row) {
+                echo json_encode(['success' => true, 'found' => true, 'data' => $row]);
+            } else {
+                echo json_encode(['success' => true, 'found' => false]);
+            }
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'found' => false, 'error' => $e->getMessage()]);
+        }
+        break;
+
+    // ===== GET DATA TABLE (ตาราง DATA) =====
+    case 'getDataTable':
+        // สร้างตาราง DATA ถ้ายังไม่มี
+        $pdo->exec("CREATE TABLE IF NOT EXISTS DATA (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            `หมวด` VARCHAR(100) DEFAULT NULL,
+            `สายจดหน่วย` VARCHAR(200) DEFAULT NULL,
+            `ตำบล` VARCHAR(100) DEFAULT NULL,
+            `พื้นที่ทำงาน` VARCHAR(100) DEFAULT NULL,
+            `หมู่บ้าน` VARCHAR(200) DEFAULT NULL,
+            `หมายเหตุ` TEXT DEFAULT NULL,
+            `สถาณะ` VARCHAR(50) DEFAULT NULL,
+            `คำแนะนำการวิ่ง` VARCHAR(200) DEFAULT NULL,
+            `พิกัดต้นสาย` VARCHAR(100) DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+        $stmt = $pdo->query("SELECT `หมวด`, `สายจดหน่วย`, `ตำบล`, `พื้นที่ทำงาน`, `หมู่บ้าน`, `หมายเหตุ`, `สถาณะ`, `คำแนะนำการวิ่ง`, `พิกัดต้นสาย` FROM DATA ORDER BY `สายจดหน่วย` ASC");
+        $rows = $stmt->fetchAll();
+        echo json_encode(['success' => true, 'data' => $rows]);
         break;
 
     // ===== APPEND (INSERT) =====
