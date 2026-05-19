@@ -2200,6 +2200,7 @@
                 renderDataList(allData);
                 updateMiniMapMarkers();
                 dataLoaded = true;
+                setDefaultFilters();
             } catch (error) {
                 console.error('Error loading data:', error);
                 Swal.fire({
@@ -2211,6 +2212,7 @@
                 allData = getSampleData();
                 renderDataList(allData);
                 dataLoaded = true;
+                setDefaultFilters();
             }
 
             showLoading(false);
@@ -2290,7 +2292,7 @@
                 const line = row['สายจดหน่วย'] || '';
                 const coords = row['พิกัดต้นสาย'] || '';
                 const actions = '<td class="datatable-actions">' +
-                    '<button class="dt-btn dt-btn-copy" onclick="dtCopyRow(' + idx + ')" title="คัดลอกไปยังจุดรับสาย"><span class="icon">📋</span> คัดลอก</button>' +
+                    '<button class="dt-btn dt-btn-copy" onclick="dtCopyRow(' + idx + ')" title="เพิ่มงานจากข้อมูลนี้"><span class="icon">📋</span> เพิ่มงาน</button>' +
                     '<button class="dt-btn dt-btn-share" onclick="dtShareRow(' + idx + ')" title="แชร์ข้อมูล"><span class="icon">📤</span> แชร์</button>' +
                     '<button class="dt-btn dt-btn-nav" onclick="dtNavigateRow(' + idx + ')" title="นำทางไปจุดใหม่"><span class="icon">🧭</span> นำทาง</button>' +
                     '<button class="dt-btn dt-btn-add" onclick="dtAddRow(' + idx + ')" title="เพิ่มข้อมูลใหม่"><span class="icon">➕</span> เพิ่ม</button>' +
@@ -2336,7 +2338,7 @@
                 body: JSON.stringify({ data: payload })
             }).then(r => r.json()).then(result => {
                 if (result.success) {
-                    showToast('✅ คัดลอกไปยังจุดรับสายแล้ว', 'success');
+                    showToast('✅ เพิ่มงานใหม่แล้ว', 'success');
                     // รีโหลด main data ถ้าอยู่ใน main view
                     if (typeof loadData === 'function') loadData();
                 } else {
@@ -3521,6 +3523,14 @@
                 if (dateFilter) filtered = filtered.filter(item => normalizeDate(item.วันที่) === dateFilter);
                 if (currentView === 'table') renderDataTable(filtered); else renderDataList(filtered);
                 updateMiniMapMarkers(filtered);
+            }
+
+            // ===== DEFAULT FILTER: วันนี้ + สถานะ "รอดำเนินการ" =====
+            function setDefaultFilters() {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('filterDate').value = today;
+                document.getElementById('filterStatus').value = 'รอดำเนินการ';
+                applyFilters();
             }
             document.getElementById('searchInput').addEventListener('input', applyFilters);
             document.getElementById('filterStatus').addEventListener('change', applyFilters);
