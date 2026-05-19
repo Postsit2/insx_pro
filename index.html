@@ -2145,6 +2145,27 @@
             }
         }
 
+        // ===== FILTER & SEARCH =====
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const dateFilter = document.getElementById('filterDate').value;
+            let filtered = allData;
+            if (search) filtered = filtered.filter(item => Object.values(item).some(v => String(v).toLowerCase().includes(search)));
+            if (statusFilter) filtered = filtered.filter(item => item.STATUS === statusFilter);
+            if (dateFilter) filtered = filtered.filter(item => normalizeDate(item.วันที่) === dateFilter);
+            if (currentView === 'table') renderDataTable(filtered); else renderDataList(filtered);
+            updateMiniMapMarkers(filtered);
+        }
+
+        // ===== DEFAULT FILTER: วันนี้ + สถานะ "รอดำเนินการ" =====
+        function setDefaultFilters() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('filterDate').value = today;
+            document.getElementById('filterStatus').value = 'รอดำเนินการ';
+            applyFilters();
+        }
+
         async function loadData() {
             showLoading(true);
 
@@ -2338,8 +2359,8 @@
                 body: JSON.stringify({ data: payload })
             }).then(r => r.json()).then(result => {
                 if (result.success) {
-                    showToast('✅ เพิ่มงานใหม่แล้ว', 'success');
-                    // รีโหลด main data ถ้าอยู่ใน main view
+                    const today = new Date().toISOString().split('T')[0];
+                    showToast('✅ คัดลอกสำเร็จ — วันที่บันทึก: ' + today, 'success');
                     if (typeof loadData === 'function') loadData();
                 } else {
                     showToast('❌ ไม่สามารถคัดลอกได้: ' + (result.error || ''), 'error');
@@ -2399,7 +2420,8 @@
                 body: JSON.stringify({ data: payload })
             }).then(r => r.json()).then(result => {
                 if (result.success) {
-                    showToast('✅ เพิ่มข้อมูลใหม่แล้ว', 'success');
+                    const today = new Date().toISOString().split('T')[0];
+                    showToast('✅ เพิ่มข้อมูลใหม่แล้ว — วันที่บันทึก: ' + today, 'success');
                     if (typeof loadData === 'function') loadData();
                 } else {
                     showToast('❌ ไม่สามารถเพิ่มได้: ' + (result.error || ''), 'error');
@@ -2430,7 +2452,8 @@
                 body: JSON.stringify({ data: payload })
             }).then(r => r.json()).then(result => {
                 if (result.success) {
-                    showToast('✅ เพิ่มรายการใหม่แล้ว — ไปที่ "จุดรับสาย" เพื่อแก้ไข', 'success');
+                    const today = new Date().toISOString().split('T')[0];
+                    showToast('✅ เพิ่มรายการใหม่แล้ว — วันที่บันทึก: ' + today + ' — ไปที่ "จุดรับสาย" เพื่อแก้ไข', 'success');
                     if (typeof loadData === 'function') loadData();
                 } else {
                     showToast('❌ ไม่สามารถเพิ่มได้: ' + (result.error || ''), 'error');
@@ -3512,26 +3535,6 @@
                 if (!e.target.closest('.form-group')) suggestionsList.classList.remove('active');
             });
 
-            // ===== FILTER & SEARCH =====
-            function applyFilters() {
-                const search = document.getElementById('searchInput').value.toLowerCase();
-                const statusFilter = document.getElementById('filterStatus').value;
-                const dateFilter = document.getElementById('filterDate').value;
-                let filtered = allData;
-                if (search) filtered = filtered.filter(item => Object.values(item).some(v => String(v).toLowerCase().includes(search)));
-                if (statusFilter) filtered = filtered.filter(item => item.STATUS === statusFilter);
-                if (dateFilter) filtered = filtered.filter(item => normalizeDate(item.วันที่) === dateFilter);
-                if (currentView === 'table') renderDataTable(filtered); else renderDataList(filtered);
-                updateMiniMapMarkers(filtered);
-            }
-
-            // ===== DEFAULT FILTER: วันนี้ + สถานะ "รอดำเนินการ" =====
-            function setDefaultFilters() {
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('filterDate').value = today;
-                document.getElementById('filterStatus').value = 'รอดำเนินการ';
-                applyFilters();
-            }
             document.getElementById('searchInput').addEventListener('input', applyFilters);
             document.getElementById('filterStatus').addEventListener('change', applyFilters);
             document.getElementById('filterDate').addEventListener('change', applyFilters);
@@ -3567,32 +3570,7 @@
             });
 
             // ===== ADD FORM MODAL (FAB) — ถูกลบออก =====
-
-            // ===== ADD LINE VIEW FORM =====                    console.log('Response status:', resp.status);
-                    const text = await resp.text();
-                    console.log('Response text:', text);
-                    let result;
-                    try { result = JSON.parse(text); } catch (parseErr) { throw new Error('Invalid JSON: ' + text.substring(0, 200)); }
-                    console.log('Parsed result:', result);
-                    if (!result.success) throw new Error(result.error || 'Save failed');
-                    allData.unshift(lineData);
-                    renderDataList(allData);
-                    updateMiniMapMarkers();
-                    document.getElementById('addLineFormView').reset();
-                    Swal.fire({ icon: 'success', title: 'เพิ่มสายสำเร็จ! 🎉', confirmButtonColor: '#92C7CF', timer: 2000 });
-                } catch (err) {
-                    console.error('Add line error:', err);
-                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message, confirmButtonColor: '#92C7CF' });
-                } finally {
-                    showLoading(false);
-                }
-            });
-            document.getElementById('addModalClose').addEventListener('click', function() {
-                document.getElementById('addModal').classList.remove('active');
-            });
-            document.getElementById('addModal').addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('active');
-            });
+            // ===== ADD LINE VIEW — ถูกลบออก =====
 
             // ===== DETAIL MODAL CLOSE =====
             document.getElementById('modalClose').addEventListener('click', closeDetail);

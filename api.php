@@ -87,58 +87,62 @@ switch ($action) {
 
     // ===== APPEND (INSERT) =====
     case 'append':
-        $raw = file_get_contents('php://input');
-        $data = json_decode($raw, true);
-        if ($data) {
-            $data = $data['data'] ?? $data;
+        try {
+            $raw = file_get_contents('php://input');
+            $data = json_decode($raw, true);
+            if ($data) {
+                $data = $data['data'] ?? $data;
+            }
+            if (!$data) {
+                echo json_encode(['success' => false, 'error' => 'No data']);
+                exit;
+            }
+
+            // สร้างตารางถ้ายังไม่มี
+            $pdo->exec("CREATE TABLE IF NOT EXISTS cable_points (
+                id VARCHAR(50) PRIMARY KEY,
+                date DATE DEFAULT NULL,
+                category VARCHAR(100) DEFAULT NULL,
+                line_unit VARCHAR(200) DEFAULT NULL,
+                tambon VARCHAR(100) DEFAULT NULL,
+                work_area VARCHAR(100) DEFAULT NULL,
+                village VARCHAR(200) DEFAULT NULL,
+                note TEXT DEFAULT NULL,
+                status VARCHAR(50) DEFAULT 'รอดำเนินการ',
+                run_advice VARCHAR(200) DEFAULT NULL,
+                coords VARCHAR(100) DEFAULT NULL,
+                lat DECIMAL(10,7) DEFAULT NULL,
+                lng DECIMAL(10,7) DEFAULT NULL,
+                images JSON DEFAULT NULL,
+                added_by VARCHAR(100) DEFAULT NULL,
+                created_at DATETIME DEFAULT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+            $stmt = $pdo->prepare("INSERT INTO cable_points (id, date, category, line_unit, tambon, work_area, village, note, status, run_advice, coords, lat, lng, images, added_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $coords = isset($data['พิกัดต้นสาย']) ? explode(',', $data['พิกัดต้นสาย']) : [null, null];
+            $lat = isset($coords[0]) ? trim($coords[0]) : null;
+            $lng = isset($coords[1]) ? trim($coords[1]) : null;
+            $images = isset($data['images']) ? json_encode($data['images']) : '[]';
+
+            $stmt->execute([
+                $data['id'] ?? uniqid(),
+                $data['วันที่'] ?? null,
+                $data['หมวด'] ?? null,
+                $data['สายจดหน่วย'] ?? null,
+                $data['ตำบล'] ?? null,
+                $data['พื้นที่ทำงาน'] ?? null,
+                $data['หมู่บ้าน'] ?? null,
+                $data['หมายเหตุ'] ?? null,
+                $data['STATUS'] ?? 'รอดำเนินการ',
+                $data['คำแนะนำการวิ่ง'] ?? null,
+                $data['พิกัดต้นสาย'] ?? null, $lat, $lng, $images,
+                $data['added_by'] ?? null
+            ]);
+            echo json_encode(['success' => true]);
+        } catch (PDOException $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
-        if (!$data) {
-            echo json_encode(['success' => false, 'error' => 'No data']);
-            exit;
-        }
-
-        // สร้างตารางถ้ายังไม่มี (รองรับ column ใหม่)
-        $pdo->exec("CREATE TABLE IF NOT EXISTS cable_points (
-            id VARCHAR(50) PRIMARY KEY,
-            date DATE DEFAULT NULL,
-            category VARCHAR(100) DEFAULT NULL,
-            line_unit VARCHAR(200) DEFAULT NULL,
-            tambon VARCHAR(100) DEFAULT NULL,
-            work_area VARCHAR(100) DEFAULT NULL,
-            village VARCHAR(200) DEFAULT NULL,
-            note TEXT DEFAULT NULL,
-            status VARCHAR(50) DEFAULT 'รอดำเนินการ',
-            run_advice VARCHAR(200) DEFAULT NULL,
-            coords VARCHAR(100) DEFAULT NULL,
-            lat DECIMAL(10,7) DEFAULT NULL,
-            lng DECIMAL(10,7) DEFAULT NULL,
-            images JSON DEFAULT NULL,
-            added_by VARCHAR(100) DEFAULT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-
-        $stmt = $pdo->prepare("INSERT INTO cable_points (id, date, category, line_unit, tambon, work_area, village, note, status, run_advice, coords, lat, lng, images, added_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-        $coords = isset($data['พิกัดต้นสาย']) ? explode(',', $data['พิกัดต้นสาย']) : [null, null];
-        $lat = isset($coords[0]) ? trim($coords[0]) : null;
-        $lng = isset($coords[1]) ? trim($coords[1]) : null;
-        $images = isset($data['images']) ? json_encode($data['images']) : '[]';
-
-        $stmt->execute([
-            $data['id'] ?? uniqid(),
-            $data['วันที่'] ?? null,
-            $data['หมวด'] ?? null,
-            $data['สายจดหน่วย'] ?? null,
-            $data['ตำบล'] ?? null,
-            $data['พื้นที่ทำงาน'] ?? null,
-            $data['หมู่บ้าน'] ?? null,
-            $data['หมายเหตุ'] ?? null,
-            $data['STATUS'] ?? 'รอดำเนินการ',
-            $data['คำแนะนำการวิ่ง'] ?? null,
-            $data['พิกัดต้นสาย'] ?? null, $lat, $lng, $images,
-            $data['added_by'] ?? null
-        ]);
-        echo json_encode(['success' => true]);
         break;
 
     // ===== UPDATE STATUS =====
