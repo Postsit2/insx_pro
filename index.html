@@ -1796,31 +1796,12 @@
 <div class="card-title">บันทึกข้อมูลจุดรับสาย</div>
 <div class="card-desc">ดูรายการจุดรับสายทั้งหมด ค้นหา กรอง และจัดการสถานะ</div>
 </div>
-<div class="dashboard-card" id="dashCardAddLine">
-<div class="card-icon">🔌</div>
-<div class="card-title">เพิ่มสายจากผู้ใช้งาน</div>
-<div class="card-desc">เพิ่มข้อมูลสายใหม่เข้าสู่ระบบ</div>
-</div>
 <div class="dashboard-card" id="dashCardDataTable">
 <div class="card-icon">📊</div>
 <div class="card-title">แผ่นข้อมูล (DATA)</div>
 <div class="card-desc">ดูข้อมูลแผ่นงานทั้งหมดจากฐานข้อมูล</div>
 </div>
 </div>
-</div>
-<!-- ADD LINE VIEW -->
-<div id="addLineView" class="view-section addline-view"><button class="back-btn" id="addLineBackBtn">← กลับหน้าหลัก</button>
-<div class="addline-form-card">
-<h2 style="font-size: 1.1rem; font-weight: 600; color: var(--dark); margin-bottom: 16px;">🔌 เพิ่มสายจากผู้ใช้</h2>
-<form id="addLineFormView">
-<div class="form-group" style="margin-bottom: 14px;"><label>ชื่อสาย <span class="required">*</span></label> <input type="text" id="lineNameView" placeholder="เช่น สาย 1 - หน่วย ก" required="" style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
-<div class="form-group" style="margin-bottom: 14px;"><label>หมวด</label> <input type="text" id="lineCategoryView" placeholder="เช่น A, B, C" style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
-<div class="form-group" style="margin-bottom: 14px;"><label>ตำบล</label> <input type="text" id="lineTambonView" placeholder="ระบุตำบล..." style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
-<div class="form-group" style="margin-bottom: 14px;"><label>หมู่บ้าน</label> <input type="text" id="lineVillageView" placeholder="ระบุหมู่บ้าน..." style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
-<div class="form-group" style="margin-bottom: 14px;"><label>พิกัด</label> <input type="text" id="lineCoordsView" placeholder="เช่น 13.7563, 100.5018" style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none;" /></div>
-<div class="form-group" style="margin-bottom: 16px;"><label>หมายเหตุ</label> <textarea id="lineNoteView" placeholder="ระบุหมายเหตุ..." style="width: 100%; padding: 10px 14px; border: 2px solid var(--gray); border-radius: 10px; font-family: 'Mitr'; font-size: 0.9rem; outline: none; min-height: 60px; resize: vertical;"></textarea></div>
-<div class="btn-group"><button type="submit" class="btn btn-primary">💾 เพิ่มสาย</button> <button type="button" class="btn btn-outline" id="btnClearAddLineView">🗑️ ล้างฟอร์ม</button></div>
-</form></div>
 </div>
 <!-- DATA TABLE VIEW (ข้อมูลจากตาราง DATA) -->
 <div id="dataTableView" class="view-section">
@@ -2335,11 +2316,34 @@
         function dtCopyRow(idx) {
             const row = dataTableFiltered[idx];
             if (!row) return;
-            const text = Object.keys(row).map(k => k + ': ' + (row[k] || '-')).join('\n');
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('✅ คัดลอกข้อมูลแล้ว', 'success');
-            }).catch(() => {
-                showToast('❌ ไม่สามารถคัดลอกได้', 'error');
+            // คัดลอกข้อมูลจาก DATA ไปเป็นรายการใหม่ใน cable_points
+            const payload = {
+                id: uuidv4(),
+                'วันที่': new Date().toISOString().split('T')[0],
+                'หมวด': row['หมวด'] || '',
+                'สายจดหน่วย': row['สายจดหน่วย'] || '',
+                'ตำบล': row['ตำบล'] || '',
+                'พื้นที่ทำงาน': row['พื้นที่ทำงาน'] || '',
+                'หมู่บ้าน': row['หมู่บ้าน'] || '',
+                'หมายเหตุ': row['หมายเหตุ'] || '',
+                'STATUS': 'รอดำเนินการ',
+                'คำแนะนำการวิ่ง': row['คำแนะนำการวิ่ง'] || '',
+                'พิกัดต้นสาย': row['พิกัดต้นสาย'] || '',
+            };
+            fetch(API_URL + '?action=append', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: payload })
+            }).then(r => r.json()).then(result => {
+                if (result.success) {
+                    showToast('✅ คัดลอกไปยังจุดรับสายแล้ว', 'success');
+                    // รีโหลด main data ถ้าอยู่ใน main view
+                    if (typeof loadData === 'function') loadData();
+                } else {
+                    showToast('❌ ไม่สามารถคัดลอกได้: ' + (result.error || ''), 'error');
+                }
+            }).catch(err => {
+                showToast('❌ ไม่สามารถคัดลอกได้: ' + err.message, 'error');
             });
         }
 
@@ -2373,38 +2377,65 @@
         function dtAddRow(idx) {
             const row = dataTableFiltered[idx];
             if (!row) return;
-            // เปิดฟอร์มเพิ่มข้อมูลใน mainView พร้อม auto-fill จาก DATA
-            showView('main');
-            setTimeout(() => {
-                autoFillFields({
-                    'หมวด': row['หมวด'] || '',
-                    'สายจดหน่วย': row['สายจดหน่วย'] || '',
-                    'ตำบล': row['ตำบล'] || '',
-                    'พื้นที่ทำงาน': row['พื้นที่ทำงาน'] || '',
-                    'หมู่บ้าน': row['หมู่บ้าน'] || '',
-                    'หมายเหตุ': row['หมายเหตุ'] || '',
-                    'สถาณะ': row['สถาณะ'] || '',
-                    'คำแนะนำการวิ่ง': row['คำแนะนำการวิ่ง'] || '',
-                    'พิกัดต้นสาย': row['พิกัดต้นสาย'] || '',
-                });
-                // เปิด modal ฟอร์ม
-                const modal = document.getElementById('addModal');
-                if (modal) modal.classList.add('active');
-                showToast('✅ กรอกข้อมูลจากแผ่น DATA แล้ว — แก้ไขแล้วกดบันทึก', 'success');
-            }, 100);
+            // เพิ่มข้อมูลจาก DATA ไปยัง cable_points โดยตรง
+            const payload = {
+                id: uuidv4(),
+                'วันที่': new Date().toISOString().split('T')[0],
+                'หมวด': row['หมวด'] || '',
+                'สายจดหน่วย': row['สายจดหน่วย'] || '',
+                'ตำบล': row['ตำบล'] || '',
+                'พื้นที่ทำงาน': row['พื้นที่ทำงาน'] || '',
+                'หมู่บ้าน': row['หมู่บ้าน'] || '',
+                'หมายเหตุ': row['หมายเหตุ'] || '',
+                'STATUS': 'รอดำเนินการ',
+                'คำแนะนำการวิ่ง': row['คำแนะนำการวิ่ง'] || '',
+                'พิกัดต้นสาย': row['พิกัดต้นสาย'] || '',
+            };
+            fetch(API_URL + '?action=append', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: payload })
+            }).then(r => r.json()).then(result => {
+                if (result.success) {
+                    showToast('✅ เพิ่มข้อมูลใหม่แล้ว', 'success');
+                    if (typeof loadData === 'function') loadData();
+                } else {
+                    showToast('❌ ไม่สามารถเพิ่มได้: ' + (result.error || ''), 'error');
+                }
+            }).catch(err => {
+                showToast('❌ ไม่สามารถเพิ่มได้: ' + err.message, 'error');
+            });
         }
 
         function dtAddNewFromData() {
-            // เปิดฟอร์มเพิ่มข้อมูลใหม่ใน mainView (ฟอร์มว่าง)
-            showView('main');
-            setTimeout(() => {
-                // ล้างฟอร์มก่อน
-                const form = document.getElementById('dataForm');
-                if (form) form.reset();
-                const modal = document.getElementById('addModal');
-                if (modal) modal.classList.add('active');
-                showToast('📝 กรอกข้อมูลใหม่แล้วกดบันทึก', 'info');
-            }, 100);
+            // เพิ่มรายการว่างใหม่ใน cable_points สำหรับวันนี้
+            const payload = {
+                id: uuidv4(),
+                'วันที่': new Date().toISOString().split('T')[0],
+                'หมวด': '',
+                'สายจดหน่วย': '',
+                'ตำบล': '',
+                'พื้นที่ทำงาน': '',
+                'หมู่บ้าน': '',
+                'หมายเหตุ': '',
+                'STATUS': 'รอดำเนินการ',
+                'คำแนะนำการวิ่ง': '',
+                'พิกัดต้นสาย': '',
+            };
+            fetch(API_URL + '?action=append', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: payload })
+            }).then(r => r.json()).then(result => {
+                if (result.success) {
+                    showToast('✅ เพิ่มรายการใหม่แล้ว — ไปที่ "จุดรับสาย" เพื่อแก้ไข', 'success');
+                    if (typeof loadData === 'function') loadData();
+                } else {
+                    showToast('❌ ไม่สามารถเพิ่มได้: ' + (result.error || ''), 'error');
+                }
+            }).catch(err => {
+                showToast('❌ ไม่สามารถเพิ่มได้: ' + err.message, 'error');
+            });
         }
 
         // ===== RENDER DATA LIST =====
@@ -3527,30 +3558,7 @@
 
             // ===== ADD FORM MODAL (FAB) — ถูกลบออก =====
 
-            // ===== ADD LINE VIEW FORM =====
-            document.getElementById('addLineFormView').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const lineData = {
-                    id: Date.now().toString(),
-                    วันที่: new Date().toISOString().split('T')[0],
-                    หมวด: document.getElementById('lineCategoryView').value.trim(),
-                    สายจดหน่วย: document.getElementById('lineNameView').value.trim(),
-                    ตำบล: document.getElementById('lineTambonView').value.trim(),
-                    หมู่บ้าน: document.getElementById('lineVillageView').value.trim(),
-                    พิกัดต้นสาย: document.getElementById('lineCoordsView').value.trim(),
-                    หมายเหตุ: document.getElementById('lineNoteView').value.trim(),
-                    STATUS: 'รอดำเนินการ',
-                    added_by: 'ไม่ระบุ',
-                    images: []
-                };
-                console.log('Saving line:', lineData);
-                if (!lineData.สายจดหน่วย) { Swal.fire('กรุณาระบุชื่อสาย', '', 'warning'); return; }
-                showLoading(true);
-                try {
-                    const url = API_URL + '?action=append';
-                    console.log('POST to:', url);
-                    const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: lineData }) });
-                    console.log('Response status:', resp.status);
+            // ===== ADD LINE VIEW FORM =====                    console.log('Response status:', resp.status);
                     const text = await resp.text();
                     console.log('Response text:', text);
                     let result;
@@ -3599,12 +3607,9 @@
 
             // ===== DASHBOARD VIEW EVENTS =====
             document.getElementById('dashCardMain').addEventListener('click', function() { showView('main'); });
-            document.getElementById('dashCardAddLine').addEventListener('click', function() { showView('addLine'); });
             document.getElementById('dashCardDataTable').addEventListener('click', function() { showView('dataTable'); });
 
             // ===== ADD LINE VIEW EVENTS =====
-            document.getElementById('addLineBackBtn').addEventListener('click', function() { showView('dashboard'); });
-            document.getElementById('btnClearAddLineView').addEventListener('click', function() { document.getElementById('addLineFormView').reset(); });
 
             // ===== MAIN VIEW BACK BUTTON =====
             document.getElementById('mainBackBtn').addEventListener('click', function() { showView('dashboard'); });
