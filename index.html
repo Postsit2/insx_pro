@@ -1334,37 +1334,6 @@
         .toast.error { border-left: 4px solid var(--danger); }
         .toast.info { border-left: 4px solid var(--primary); }
 
-        /* ===== FAB BUTTON ===== */
-        .fab-btn {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #fff;
-            border: none;
-            font-size: 1.8rem;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(146, 199, 207, 0.5);
-            z-index: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .fab-btn:hover {
-            transform: translateX(-50%) scale(1.1);
-            box-shadow: 0 6px 28px rgba(146, 199, 207, 0.6);
-        }
-
-        .fab-btn:active {
-            transform: translateX(-50%) scale(0.95);
-        }
-
         /* ===== ADD FORM MODAL ===== */
         #addModal .modal-content {
             padding: 20px 24px 24px;
@@ -1385,14 +1354,6 @@
             border-radius: 4px;
         }
 
-        @media (max-width: 600px) {
-            .fab-btn {
-                bottom: 16px;
-                width: 54px;
-                height: 54px;
-                font-size: 1.5rem;
-            }
-        }
         /* ===== VIEW SECTIONS ===== */
         .view-section {
             display: none;
@@ -1414,6 +1375,11 @@
             margin-bottom: 16px;
             flex-wrap: wrap;
             gap: 10px;
+        }
+        .datatable-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .datatable-header h2 {
             font-size: 1.1rem;
@@ -1488,6 +1454,56 @@
             font-size: 2rem;
             display: block;
             margin-bottom: 8px;
+        }
+        .datatable-actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+        .dt-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-family: 'Mitr', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .dt-btn-copy {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .dt-btn-copy:hover {
+            background: #bbdefb;
+        }
+        .dt-btn-share {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .dt-btn-share:hover {
+            background: #e1bee7;
+        }
+        .dt-btn-nav {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .dt-btn-nav:hover {
+            background: #c8e6c9;
+        }
+        .dt-btn-add {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .dt-btn-add:hover {
+            background: #ffe0b2;
+        }
+        .dt-btn .icon {
+            font-size: 0.75rem;
         }
 
         /* ===== DASHBOARD VIEW ===== */
@@ -1811,7 +1827,10 @@
 <div class="datatable-view">
 <div class="datatable-header">
 <h2>📊 แผ่นข้อมูล (DATA)</h2>
+<div class="datatable-header-right">
 <input type="text" class="datatable-search" id="dataTableSearch" placeholder="🔍 ค้นหาในแผ่นข้อมูล..." />
+<button class="dt-btn dt-btn-add" onclick="dtAddNewFromData()"><span class="icon">➕</span> เพิ่มข้อมูลใหม่</button>
+</div>
 </div>
 <div class="datatable-wrapper">
 <table class="datatable" id="dataTable">
@@ -1843,7 +1862,7 @@
         let modalMarker = null;
         let currentDetailItem = null;
         let userLocation = null;
-        let appView = 'main'; // dashboard | main | addLine | dataTable
+        let appView = 'main'; // dashboard | main | dataTable
         let dataLoaded = false;
         let dataTableData = [];
         let dataTableFiltered = [];
@@ -1879,9 +1898,6 @@
             }
             if (appView !== 'main') {
                 navHtml += `<button class="header-nav-btn" onclick="showView('main')">📍 จุดรับสาย</button>`;
-            }
-            if (appView !== 'addLine') {
-                navHtml += `<button class="header-nav-btn" onclick="showView('addLine')">🔌 เพิ่มสาย</button>`;
             }
             if (appView !== 'dataTable') {
                 navHtml += `<button class="header-nav-btn" onclick="showView('dataTable')">📊 แผ่นข้อมูล</button>`;
@@ -2282,12 +2298,23 @@
                 return;
             }
             const columns = Object.keys(dataTableFiltered[0]);
-            thead.innerHTML = '<tr>' + columns.map(col => '<th>' + col + '</th>').join('') + '</tr>';
-            tbody.innerHTML = dataTableFiltered.map(row => {
-                return '<tr>' + columns.map(col => {
+            // Header + column การดำเนินการ
+            thead.innerHTML = '<tr>' + columns.map(col => '<th>' + col + '</th>').join('') + '<th>การดำเนินการ</th></tr>';
+            tbody.innerHTML = dataTableFiltered.map((row, idx) => {
+                const cells = columns.map(col => {
                     const val = row[col] != null ? String(row[col]) : '';
                     return '<td title="' + val.replace(/"/g, '&quot;') + '">' + (val || '-') + '</td>';
-                }).join('') + '</tr>';
+                }).join('');
+                // ปุ่มการดำเนินการ
+                const line = row['สายจดหน่วย'] || '';
+                const coords = row['พิกัดต้นสาย'] || '';
+                const actions = '<td class="datatable-actions">' +
+                    '<button class="dt-btn dt-btn-copy" onclick="dtCopyRow(' + idx + ')" title="คัดลอกไปยังจุดรับสาย"><span class="icon">📋</span> คัดลอก</button>' +
+                    '<button class="dt-btn dt-btn-share" onclick="dtShareRow(' + idx + ')" title="แชร์ข้อมูล"><span class="icon">📤</span> แชร์</button>' +
+                    '<button class="dt-btn dt-btn-nav" onclick="dtNavigateRow(' + idx + ')" title="นำทางไปจุดใหม่"><span class="icon">🧭</span> นำทาง</button>' +
+                    '<button class="dt-btn dt-btn-add" onclick="dtAddRow(' + idx + ')" title="เพิ่มข้อมูลใหม่"><span class="icon">➕</span> เพิ่ม</button>' +
+                    '</td>';
+                return '<tr>' + cells + actions + '</tr>';
             }).join('');
             document.getElementById('dataTableCount').textContent = 'แสดง ' + dataTableFiltered.length + ' จาก ' + dataTableData.length + ' รายการ';
         }
@@ -2302,6 +2329,82 @@
                 );
             }
             renderDataSheet();
+        }
+
+        // ===== DATA TABLE ACTION BUTTONS =====
+        function dtCopyRow(idx) {
+            const row = dataTableFiltered[idx];
+            if (!row) return;
+            const text = Object.keys(row).map(k => k + ': ' + (row[k] || '-')).join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✅ คัดลอกข้อมูลแล้ว', 'success');
+            }).catch(() => {
+                showToast('❌ ไม่สามารถคัดลอกได้', 'error');
+            });
+        }
+
+        function dtShareRow(idx) {
+            const row = dataTableFiltered[idx];
+            if (!row) return;
+            const text = Object.keys(row).map(k => k + ': ' + (row[k] || '-')).join('\n');
+            if (navigator.share) {
+                navigator.share({ title: 'ข้อมูลสาย: ' + (row['สายจดหน่วย'] || ''), text: text }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('✅ คัดลอกสำหรับแชร์แล้ว', 'success');
+                }).catch(() => {
+                    showToast('❌ ไม่สามารถแชร์ได้', 'error');
+                });
+            }
+        }
+
+        function dtNavigateRow(idx) {
+            const row = dataTableFiltered[idx];
+            if (!row) return;
+            const coords = row['พิกัดต้นสาย'] || '';
+            if (!coords) {
+                showToast('⚠️ ไม่มีข้อมูลพิกัด', 'warning');
+                return;
+            }
+            const url = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(coords);
+            window.open(url, '_blank');
+        }
+
+        function dtAddRow(idx) {
+            const row = dataTableFiltered[idx];
+            if (!row) return;
+            // เปิดฟอร์มเพิ่มข้อมูลใน mainView พร้อม auto-fill จาก DATA
+            showView('main');
+            setTimeout(() => {
+                autoFillFields({
+                    'หมวด': row['หมวด'] || '',
+                    'สายจดหน่วย': row['สายจดหน่วย'] || '',
+                    'ตำบล': row['ตำบล'] || '',
+                    'พื้นที่ทำงาน': row['พื้นที่ทำงาน'] || '',
+                    'หมู่บ้าน': row['หมู่บ้าน'] || '',
+                    'หมายเหตุ': row['หมายเหตุ'] || '',
+                    'สถาณะ': row['สถาณะ'] || '',
+                    'คำแนะนำการวิ่ง': row['คำแนะนำการวิ่ง'] || '',
+                    'พิกัดต้นสาย': row['พิกัดต้นสาย'] || '',
+                });
+                // เปิด modal ฟอร์ม
+                const modal = document.getElementById('addModal');
+                if (modal) modal.classList.add('active');
+                showToast('✅ กรอกข้อมูลจากแผ่น DATA แล้ว — แก้ไขแล้วกดบันทึก', 'success');
+            }, 100);
+        }
+
+        function dtAddNewFromData() {
+            // เปิดฟอร์มเพิ่มข้อมูลใหม่ใน mainView (ฟอร์มว่าง)
+            showView('main');
+            setTimeout(() => {
+                // ล้างฟอร์มก่อน
+                const form = document.getElementById('dataForm');
+                if (form) form.reset();
+                const modal = document.getElementById('addModal');
+                if (modal) modal.classList.add('active');
+                showToast('📝 กรอกข้อมูลใหม่แล้วกดบันทึก', 'info');
+            }, 100);
         }
 
         // ===== RENDER DATA LIST =====
@@ -3422,11 +3525,7 @@
                 }
             });
 
-            // ===== ADD FORM MODAL (FAB) =====
-            document.getElementById('fabAddBtn').addEventListener('click', function() {
-                document.getElementById('addModal').classList.add('active');
-                initDate();
-            });
+            // ===== ADD FORM MODAL (FAB) — ถูกลบออก =====
 
             // ===== ADD LINE VIEW FORM =====
             document.getElementById('addLineFormView').addEventListener('submit', async function(e) {
@@ -3517,7 +3616,6 @@
     </script>
 </p>
 <!-- FAB BUTTON (inside mainView) -->
-<p><button class="fab-btn" id="fabAddBtn" title="บันทึกข้อมูลจุดรับสาย">➕</button></p>
 <!-- ADD FORM MODAL -->
 <div class="modal-overlay" id="addModal">
 <div class="modal-content" style="max-width: 650px; max-height: 90vh; border-radius: 20px;">
