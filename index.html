@@ -1919,7 +1919,7 @@
 
         // ===== CONFIG =====
         const API_URL = 'https://postsit.byethost22.com/api.php'; // MyAdmin API
-        // ข้อมูลทั้งหมดดึงจาก SQL (ตาราง cable_points) ผ่าน api.php
+        // ข้อมูลทั้งหมดดึงจาก SQL (ตาราง work_records) ผ่าน api.php
 
         // ===== STATE =====
         let allData = [];
@@ -1933,6 +1933,7 @@
         let userLocation = null;
         let appView = 'main'; // dashboard | main | dataTable | workRecord
         let dataLoaded = false;
+        let justAdded = false;
         let dataTableData = [];
         let dataTableFiltered = [];
 
@@ -2227,7 +2228,7 @@
                     } catch (sugErr) {
                         console.warn('Could not load DATA suggestions:', sugErr.message);
                     }
-                    // Fallback: ถ้า suggestions ว่าง ใช้จาก cable_points
+                    // Fallback: ถ้า suggestions ว่าง ใช้จาก work_records
                     if (lineUnitSuggestions.length === 0) {
                         lineUnitSuggestions = [...new Set(allData.map(d => d.สายจดหน่วย).filter(Boolean))];
                     }
@@ -2241,6 +2242,10 @@
                 updateMiniMapMarkers();
                 dataLoaded = true;
                 setDefaultFilters();
+                if (justAdded) {
+                    justAdded = false;
+                    showToast('✅ เพิ่มสำเร็จแล้ว จำนวน ' + allData.length + ' รายการ', 'success');
+                }
             } catch (error) {
                 console.error('Error loading data:', error);
                 Swal.fire({
@@ -2358,7 +2363,7 @@
         function dtCopyRow(idx) {
             const row = dataTableFiltered[idx];
             if (!row) return;
-            // คัดลอกข้อมูลจาก DATA ไปเป็นรายการใหม่ใน cable_points
+            // คัดลอกข้อมูลจาก DATA ไปเป็นรายการใหม่ใน work_records
             const payload = {
                 id: uuidv4(),
                 'วันที่': new Date().toISOString().split('T')[0],
@@ -2378,8 +2383,7 @@
                 body: JSON.stringify({ data: payload })
             }).then(r => r.json()).then(result => {
                 if (result.success) {
-                    const today = new Date().toISOString().split('T')[0];
-                    showToast('✅ คัดลอกสำเร็จ — วันที่บันทึก: ' + today, 'success');
+                    justAdded = true;
                     if (typeof loadData === 'function') loadData();
                 } else {
                     showToast('❌ ไม่สามารถคัดลอกได้: ' + (result.error || ''), 'error');
@@ -2419,7 +2423,7 @@
         function dtAddRow(idx) {
             const row = dataTableFiltered[idx];
             if (!row) return;
-            // เพิ่มข้อมูลจาก DATA ไปยัง cable_points โดยตรง
+            // เพิ่มข้อมูลจาก DATA ไปยัง work_records โดยตรง
             const payload = {
                 id: uuidv4(),
                 'วันที่': new Date().toISOString().split('T')[0],
@@ -2439,8 +2443,7 @@
                 body: JSON.stringify({ data: payload })
             }).then(r => r.json()).then(result => {
                 if (result.success) {
-                    const today = new Date().toISOString().split('T')[0];
-                    showToast('✅ เพิ่มข้อมูลใหม่แล้ว — วันที่บันทึก: ' + today, 'success');
+                    justAdded = true;
                     if (typeof loadData === 'function') loadData();
                 } else {
                     showToast('❌ ไม่สามารถเพิ่มได้: ' + (result.error || ''), 'error');
@@ -2451,7 +2454,7 @@
         }
 
         function dtAddNewFromData() {
-            // เพิ่มรายการว่างใหม่ใน cable_points สำหรับวันนี้
+            // เพิ่มรายการว่างใหม่ใน work_records สำหรับวันนี้
             const payload = {
                 id: uuidv4(),
                 'วันที่': new Date().toISOString().split('T')[0],
@@ -2471,8 +2474,7 @@
                 body: JSON.stringify({ data: payload })
             }).then(r => r.json()).then(result => {
                 if (result.success) {
-                    const today = new Date().toISOString().split('T')[0];
-                    showToast('✅ เพิ่มรายการใหม่แล้ว — วันที่บันทึก: ' + today + ' — ไปที่ "จุดรับสาย" เพื่อแก้ไข', 'success');
+                    justAdded = true;
                     if (typeof loadData === 'function') loadData();
                 } else {
                     showToast('❌ ไม่สามารถเพิ่มได้: ' + (result.error || ''), 'error');

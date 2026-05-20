@@ -27,7 +27,7 @@ switch ($action) {
 
     // ===== GET ALL DATA =====
     case 'getData':
-        $stmt = $pdo->query("SELECT * FROM cable_points ORDER BY created_at DESC");
+        $stmt = $pdo->query("SELECT * FROM work_records ORDER BY created_at DESC");
         $rows = $stmt->fetchAll();
         echo json_encode(['success' => true, 'data' => $rows]);
         break;
@@ -85,7 +85,7 @@ switch ($action) {
         echo json_encode(['success' => true, 'data' => $rows]);
         break;
 
-    // ===== APPEND (INSERT) - legacy cable_points =====
+    // ===== APPEND (INSERT) -> work_records =====
     case 'append':
         try {
             $raw = file_get_contents('php://input');
@@ -97,20 +97,26 @@ switch ($action) {
                 echo json_encode(['success' => false, 'error' => 'No data']);
                 exit;
             }
-            $pdo->exec("CREATE TABLE IF NOT EXISTS cable_points (
-                id VARCHAR(50) PRIMARY KEY, date DATE DEFAULT NULL, category VARCHAR(100) DEFAULT NULL,
-                line_unit VARCHAR(200) DEFAULT NULL, tambon VARCHAR(100) DEFAULT NULL, work_area VARCHAR(100) DEFAULT NULL,
-                village VARCHAR(200) DEFAULT NULL, note TEXT DEFAULT NULL, status VARCHAR(50) DEFAULT 'รอดำเนินการ',
-                run_advice VARCHAR(200) DEFAULT NULL, coords VARCHAR(100) DEFAULT NULL, lat DECIMAL(10,7) DEFAULT NULL,
-                lng DECIMAL(10,7) DEFAULT NULL, images JSON DEFAULT NULL, added_by VARCHAR(100) DEFAULT NULL,
-                created_at DATETIME DEFAULT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
             $coords = isset($data['พิกัดต้นสาย']) ? explode(',', $data['พิกัดต้นสาย']) : [null, null];
             $lat = isset($coords[0]) ? trim($coords[0]) : null;
             $lng = isset($coords[1]) ? trim($coords[1]) : null;
             $images = isset($data['images']) ? json_encode($data['images']) : '[]';
-            $stmt = $pdo->prepare("INSERT INTO cable_points (id, date, category, line_unit, tambon, work_area, village, note, status, run_advice, coords, lat, lng, images, added_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-            $stmt->execute([$data['id'] ?? uniqid(), $data['วันที่'] ?? null, $data['หมวด'] ?? null, $data['สายจดหน่วย'] ?? null, $data['ตำบล'] ?? null, $data['พื้นที่ทำงาน'] ?? null, $data['หมู่บ้าน'] ?? null, $data['หมายเหตุ'] ?? null, $data['STATUS'] ?? 'รอดำเนินการ', $data['คำแนะนำการวิ่ง'] ?? null, $data['พิกัดต้นสาย'] ?? null, $lat, $lng, $images, $data['added_by'] ?? null]);
+            $stmt = $pdo->prepare("INSERT INTO work_records (id, date, category, line_unit, tambon, work_area, village, status, coords, lat, lng, note, run_advice, images, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $stmt->execute([
+                $data['id'] ?? uniqid(),
+                $data['วันที่'] ?? null,
+                $data['หมวด'] ?? null,
+                $data['สายจดหน่วย'] ?? null,
+                $data['ตำบล'] ?? null,
+                $data['พื้นที่ทำงาน'] ?? null,
+                $data['หมู่บ้าน'] ?? null,
+                $data['STATUS'] ?? 'รอดำเนินการ',
+                $data['พิกัดต้นสาย'] ?? null,
+                $lat, $lng,
+                $data['หมายเหตุ'] ?? null,
+                $data['คำแนะนำการวิ่ง'] ?? null,
+                $images
+            ]);
             echo json_encode(['success' => true]);
         } catch (PDOException $e) {
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -198,7 +204,7 @@ switch ($action) {
             echo json_encode(['success' => false, 'error' => 'Missing id or status']);
             exit;
         }
-        $stmt = $pdo->prepare("UPDATE cable_points SET status = ? WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE work_records SET status = ? WHERE id = ?");
         $stmt->execute([$data['status'], $data['id']]);
         echo json_encode(['success' => true]);
         break;
@@ -210,7 +216,7 @@ switch ($action) {
             echo json_encode(['success' => false, 'error' => 'Missing id']);
             exit;
         }
-        $stmt = $pdo->prepare("DELETE FROM cable_points WHERE id = ?");
+        $stmt = $pdo->prepare("DELETE FROM work_records WHERE id = ?");
         $stmt->execute([$id]);
         echo json_encode(['success' => true]);
         break;
