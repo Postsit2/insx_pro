@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🗺️ ระบบปักหมุด - จัดการจุดรับสาย</title>
+    <title>🗺️ ระบบบันทึกงาน</title>
 
     <!-- Google Fonts - Mitr -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1334,25 +1334,6 @@
         .toast.error { border-left: 4px solid var(--danger); }
         .toast.info { border-left: 4px solid var(--primary); }
 
-        /* ===== ADD FORM MODAL ===== */
-        #addModal .modal-content {
-            padding: 20px 24px 24px;
-        }
-
-        #addModal .form-grid {
-            max-height: calc(90vh - 140px);
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        #addModal .form-grid::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        #addModal .form-grid::-webkit-scrollbar-thumb {
-            background: var(--gray);
-            border-radius: 4px;
-        }
 
         /* ===== VIEW SECTIONS ===== */
         .view-section {
@@ -1632,22 +1613,6 @@
             color: #888;
         }
 
-        /* ===== ADD LINE VIEW ===== */
-        .addline-view {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px 16px;
-            padding-bottom: 40px;
-        }
-
-        .addline-form-card {
-            background: #fff;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 2px 12px rgba(146, 199, 207, 0.15);
-            border: 1px solid var(--gray);
-        }
-
         /* ===== BACK BUTTON ===== */
         .back-btn {
             display: inline-flex;
@@ -1711,6 +1676,129 @@
                 font-size: 0.72rem;
             }
         }
+        /* ===== WORK RECORD PAGE ===== */
+        .workrecord-view {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 40px;
+        }
+        .workrecord-form-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 2px 16px rgba(146, 199, 207, 0.15);
+            border: 1px solid var(--gray);
+        }
+        .workrecord-form-card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+        .workrecord-form-card .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .workrecord-form-card .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .workrecord-form-card .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .workrecord-form-card label {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #5a6c7d;
+        }
+        .workrecord-form-card label .required {
+            color: #e05050;
+        }
+        .workrecord-form-card input,
+        .workrecord-form-card select,
+        .workrecord-form-card textarea {
+            padding: 10px 14px;
+            border: 2px solid var(--gray);
+            border-radius: 12px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.88rem;
+            background: #fafbfd;
+            transition: border-color 0.2s;
+        }
+        .workrecord-form-card input:focus,
+        .workrecord-form-card select:focus,
+        .workrecord-form-card textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            background: #fff;
+        }
+        .workrecord-form-card textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+        .workrecord-form-card .coord-input-group {
+            display: flex;
+            gap: 8px;
+        }
+        .workrecord-form-card .coord-input-group input {
+            flex: 1;
+        }
+        .workrecord-form-card .coord-btn {
+            padding: 10px 14px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.82rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .workrecord-form-card .coord-btn:hover {
+            background: #7ab8c4;
+        }
+        .workrecord-form-card .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .workrecord-form-card .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 14px;
+            font-family: 'Mitr', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .workrecord-form-card .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .workrecord-form-card .btn-primary:hover {
+            background: #7ab8c4;
+        }
+        .workrecord-form-card .btn-outline {
+            background: #fff;
+            color: #888;
+            border: 2px solid var(--gray);
+        }
+        .workrecord-form-card .btn-outline:hover {
+            border-color: #bbb;
+            color: #555;
+        }
+        @media (max-width: 600px) {
+            .workrecord-form-card .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .workrecord-form-card {
+                padding: 18px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1765,7 +1853,7 @@
 </div>
 <!-- IMAGE MODAL -->
 <div class="image-modal" id="imageModal"><button class="image-modal-close" id="imageModalClose">✕</button> <img alt="Preview" id="imageModalImg" /></div>
-<!-- FOOTER --><footer class="footer">© 2025 อ.เอ เออเอ — ระบบปักหมุดจัดการจุดรับสาย</footer></div>
+<!-- FOOTER --><footer class="footer">© 2025 — ระบบบันทึกงาน</footer></div>
 <!-- DASHBOARD VIEW -->
 <div id="dashboardView" class="view-section dashboard-view">
 <div class="dashboard-welcome">
@@ -1791,10 +1879,10 @@
 </div>
 </div>
 <div class="dashboard-cards">
-<div class="dashboard-card" id="dashCardMain">
-<div class="card-icon">📍</div>
-<div class="card-title">บันทึกข้อมูลจุดรับสาย</div>
-<div class="card-desc">ดูรายการจุดรับสายทั้งหมด ค้นหา กรอง และจัดการสถานะ</div>
+<div class="dashboard-card" id="dashCardWorkRecord">
+<div class="card-icon">📝</div>
+    <div class="card-title">บันทึกงาน</div>
+    <div class="card-desc">บันทึกงานใหม่ พร้อมรายละเอียด พิกัด และรูปภาพ</div>
 </div>
 <div class="dashboard-card" id="dashCardDataTable">
 <div class="card-icon">📊</div>
@@ -1836,14 +1924,14 @@
         // ===== STATE =====
         let allData = [];
         let lineUnitSuggestions = [];
-        let uploadedImages = [];
+        let wrUploadedImages = [];
         let miniMap = null;
         let modalMap = null;
         let miniMarker = null;
         let modalMarker = null;
         let currentDetailItem = null;
         let userLocation = null;
-        let appView = 'main'; // dashboard | main | dataTable
+        let appView = 'main'; // dashboard | main | dataTable | workRecord
         let dataLoaded = false;
         let dataTableData = [];
         let dataTableFiltered = [];
@@ -1869,6 +1957,11 @@
             if (view === 'dataTable') {
                 loadDataTable();
             }
+            if (view === 'workRecord') {
+                const today = new Date().toISOString().split('T')[0];
+                const wrDate = document.getElementById('wrDate');
+                if (wrDate) wrDate.value = today;
+            }
         }
 
         function updateHeaderNav() {
@@ -1878,10 +1971,13 @@
                 navHtml += `<button class="header-nav-btn" onclick="showView('dashboard')">🏠 หน้าหลัก</button>`;
             }
             if (appView !== 'main') {
-                navHtml += `<button class="header-nav-btn" onclick="showView('main')">📍 จุดรับสาย</button>`;
+                navHtml += `<button class="header-nav-btn" onclick="showView('main')">📍 รายการงาน</button>`;
             }
             if (appView !== 'dataTable') {
                 navHtml += `<button class="header-nav-btn" onclick="showView('dataTable')">📊 แผ่นข้อมูล</button>`;
+            }
+            if (appView !== 'workRecord') {
+                navHtml += `<button class="header-nav-btn" onclick="showView('workRecord')">📝 บันทึกงาน</button>`;
             }
             nav.innerHTML = navHtml;
         }
@@ -1909,7 +2005,8 @@
 
         function initDate() {
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('inputDate').value = today;
+            const wrDate = document.getElementById('wrDate');
+            if (wrDate) wrDate.value = today;
         }
 
         function getUserLocation() {
@@ -2004,7 +2101,8 @@
             miniMap.on('click', function(e) {
                 const lat = e.latlng.lat.toFixed(6);
                 const lng = e.latlng.lng.toFixed(6);
-                document.getElementById('inputCoords').value = `${lat}, ${lng}`;
+                const wrCoords = document.getElementById('wrCoords');
+                if (wrCoords) wrCoords.value = `${lat}, ${lng}`;
 
                 if (miniMarker) miniMap.removeLayer(miniMarker);
                 miniMarker = L.marker([lat, lng]).addTo(miniMap);
@@ -2064,85 +2162,6 @@
 
                 setTimeout(() => modalMap.invalidateSize(), 200);
             }, 300);
-        }
-
-        // ===== AUTO-FILL FIELDS FROM SQL DATA =====
-        // Mapping: DATA tab column → form input id
-        const FIELD_MAP = {
-            'หมวด': 'inputCategory',
-            'สายจดหน่วย': 'inputLineUnit',
-            'ตำบล': 'inputTambon',
-            'พื้นที่ทำงาน': 'inputWorkArea',
-            'หมู่บ้าน': 'inputVillage',
-            'หมายเหตุ': 'inputNote',
-            'STATUS': 'inputStatus',
-            'คำแนะนำการวิ่ง': 'inputRunAdvice',
-            'พิกัดต้นสาย': 'inputCoords',
-            // รองรับชื่อ column ที่อาจต่างกัน
-            'สาย': 'inputLineUnit',
-            'หน่วย': 'inputLineUnit',
-            'ตำบล/แขวง': 'inputTambon',
-            'พื้นที่': 'inputWorkArea',
-            'หมู่': 'inputVillage',
-            'คำแนะนำ': 'inputRunAdvice',
-            'พิกัด': 'inputCoords',
-            'สถาณะ': 'inputStatus',
-            'status': 'inputStatus',
-            'lat': null,
-            'lng': null,
-            'latitude': null,
-            'longitude': null,
-        };
-
-        function autoFillFields(data) {
-            console.log('autoFillFields called with:', data);
-            let filled = [];
-
-            Object.keys(data).forEach(key => {
-                const inputId = FIELD_MAP[key];
-                if (!inputId) return;
-
-                const el = document.getElementById(inputId);
-                if (!el) { console.log('Element not found:', inputId, 'for key:', key); return; }
-
-                let val = String(data[key] || '').trim();
-                if (!val) return;
-
-                // พิเศษ: ถ้ามี column lat และ lng แยก → รวมเป็นพิกัด
-                if ((key === 'lat' || key === 'latitude') && data['lng']) {
-                    val = `${val}, ${String(data['lng']).trim()}`;
-                    const coordsEl = document.getElementById('inputCoords');
-                    if (coordsEl) {
-                        coordsEl.value = val;
-                        filled.push('พิกัดต้นสาย');
-                    }
-                    return;
-                }
-                if (key === 'lng' || key === 'longitude') return;
-
-                // สำหรับ STATUS ต้อง match กับ option value
-                if (inputId === 'inputStatus') {
-                    const select = el;
-                    const options = Array.from(select.options);
-                    const exactMatch = options.find(o => o.value === val);
-                    if (exactMatch) { select.value = val; filled.push(key); return; }
-                    const partialMatch = options.find(o => o.value.includes(val) || val.includes(o.value));
-                    if (partialMatch) { select.value = partialMatch.value; filled.push(key); return; }
-                    return;
-                }
-
-                // สำหรับ input ปกติ
-                el.value = val;
-                filled.push(key);
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-                console.log('Filled:', inputId, '=', val);
-                el.dispatchEvent(new Event('change', { bubbles: true }));
-            });
-
-            // แสดงฟิลด์ที่เติม (debug)
-            if (filled.length > 0) {
-                console.log('Auto-filled fields:', filled.join(', '));
-            }
         }
 
         // ===== FILTER & SEARCH =====
@@ -3002,34 +3021,24 @@
         // ===== IMAGE UPLOAD =====
         // (moved to initEventListeners)
 
-        function handleImageFiles(files) {
+        function handleWrImageFiles(files) {
             Array.from(files).forEach(file => {
                 if (!file.type.startsWith('image/')) return;
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const base64 = e.target.result;
-                    uploadedImages.push(base64);
-                    renderImagePreviews();
+                    wrUploadedImages.push(e.target.result);
+                    const grid = document.getElementById('wrImagePreviewGrid');
+                    grid.innerHTML = wrUploadedImages.map((img, i) => `
+                        <div class="image-preview-item">
+                            <img src="${img}" alt="Preview">
+                            <button class="remove-img" onclick="wrUploadedImages.splice(${i},1); handleWrImageFiles([]);">✕</button>
+                        </div>
+                    `).join('');
                 };
                 reader.readAsDataURL(file);
             });
         }
 
-        function renderImagePreviews() {
-            const grid = document.getElementById('imagePreviewGrid');
-            grid.innerHTML = uploadedImages.map((img, i) => `
-                <div class="image-preview-item">
-                    <img src="${img}" alt="Preview">
-                    <button class="remove-img" onclick="removeImage(${i})">✕</button>
-                </div>
-            `).join('');
-        }
-
-        window.removeImage = function(index) {
-            uploadedImages.splice(index, 1);
-            renderImagePreviews();
-        };
 
 
         // ===== SHARE SINGLE ITEM =====
@@ -3098,7 +3107,6 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 document.getElementById('detailModal').classList.remove('active');
-                document.getElementById('addModal').classList.remove('active');
                 document.getElementById('imageModal').classList.remove('active');
             }
         });
@@ -3389,6 +3397,13 @@
             document.getElementById('loadingOverlay').classList.toggle('active', show);
         }
 
+        function uuidv4() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -3400,140 +3415,6 @@
 
         function initEventListeners() {
 
-            // ===== FORM SUBMISSION =====
-            document.getElementById('dataForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const coords = parseCoords(document.getElementById('inputCoords').value);
-                if (!coords) {
-                    Swal.fire({ icon: 'warning', title: 'พิกัดไม่ถูกต้อง', text: 'กรุณาระบุพิกัดในรูปแบบ: ละติจูด, ลองจิจูด', confirmButtonColor: '#92C7CF' });
-                    return;
-                }
-                const formData = {
-                    id: Date.now().toString(),
-                    วันที่: document.getElementById('inputDate').value,
-                    หมวด: document.getElementById('inputCategory').value,
-                    สายจดหน่วย: document.getElementById('inputLineUnit').value,
-                    ตำบล: document.getElementById('inputTambon').value,
-                    พื้นที่ทำงาน: document.getElementById('inputWorkArea').value,
-                    หมู่บ้าน: document.getElementById('inputVillage').value,
-                    หมายเหตุ: document.getElementById('inputNote').value,
-                    STATUS: document.getElementById('inputStatus').value,
-                    คำแนะนำการวิ่ง: document.getElementById('inputRunAdvice').value,
-                    พิกัดต้นสาย: `${coords.lat}, ${coords.lng}`,
-                    images: [...uploadedImages]
-                };
-                showLoading(true);
-                try {
-                    const url = API_URL + '?action=append';
-                    console.log('Saving to:', url, formData);
-                    const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: formData }) });
-                    console.log('Save response status:', resp.status);
-                    const text = await resp.text();
-                    console.log('Save response text:', text);
-                    let result;
-                    try { result = JSON.parse(text); } catch (e) { throw new Error('API ตอบกลับไม่ใช่ JSON: ' + text.substring(0, 200)); }
-                    if (!result.success) throw new Error(result.error || 'Save failed');
-                    allData.unshift(formData);
-                    renderDataList(allData);
-                    updateMiniMapMarkers();
-                    document.getElementById('dataForm').reset();
-                    initDate();
-                    uploadedImages = [];
-                    document.getElementById('imagePreviewGrid').innerHTML = '';
-                    if (miniMarker) { miniMap.removeLayer(miniMarker); miniMarker = null; }
-                    document.getElementById('addModal').classList.remove('active');
-                    Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ! 🎉', text: 'ข้อมูลถูกบันทึกเรียบร้อยแล้ว', confirmButtonColor: '#92C7CF', timer: 2500, timerProgressBar: true });
-                } catch (error) {
-                    console.error('Save error:', error);
-                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่', confirmButtonColor: '#92C7CF' });
-                }
-                showLoading(false);
-            });
-
-            // ===== IMAGE UPLOAD =====
-            const imageUploadArea = document.getElementById('imageUploadArea');
-            const imageInput = document.getElementById('imageInput');
-            imageUploadArea.addEventListener('click', () => imageInput.click());
-            imageUploadArea.addEventListener('dragover', (e) => { e.preventDefault(); imageUploadArea.style.borderColor = 'var(--primary)'; });
-            imageUploadArea.addEventListener('dragleave', () => { imageUploadArea.style.borderColor = 'var(--gray)'; });
-            imageUploadArea.addEventListener('drop', (e) => { e.preventDefault(); imageUploadArea.style.borderColor = 'var(--gray)'; handleImageFiles(e.dataTransfer.files); });
-            imageInput.addEventListener('change', (e) => { handleImageFiles(e.target.files); });
-
-            // ===== CLEAR FORM =====
-            document.getElementById('btnClearForm').addEventListener('click', function() {
-                document.getElementById('dataForm').reset();
-                initDate();
-                uploadedImages = [];
-                document.getElementById('imagePreviewGrid').innerHTML = '';
-                if (miniMarker) { miniMap.removeLayer(miniMarker); miniMarker = null; }
-            });
-
-            // ===== GPS BUTTON =====
-            document.getElementById('btnGetLocation').addEventListener('click', function() {
-                if (!navigator.geolocation) { Swal.fire('ไม่รองรับ', 'เบราว์เซอร์ไม่รองรับ Geolocation', 'error'); return; }
-                const btn = this;
-                btn.textContent = '⏳...';
-                navigator.geolocation.getCurrentPosition(
-                    pos => {
-                        const lat = pos.coords.latitude.toFixed(6);
-                        const lng = pos.coords.longitude.toFixed(6);
-                        document.getElementById('inputCoords').value = `${lat}, ${lng}`;
-                        userLocation = { lat: parseFloat(lat), lng: parseFloat(lng) };
-                        if (miniMarker) miniMap.removeLayer(miniMarker);
-                        miniMarker = L.marker([lat, lng]).addTo(miniMap);
-                        miniMap.setView([lat, lng], 15);
-                        btn.textContent = '📍 GPS';
-                        showToast('📍 รับพิกัด GPS สำเร็จ', 'success');
-                    },
-                    err => { btn.textContent = '📍 GPS'; showToast('ไม่สามารถรับพิกัดได้', 'error'); },
-                    { enableHighAccuracy: true, timeout: 10000 }
-                );
-            });
-
-            // ===== SUGGESTIONS AUTOCOMPLETE =====
-            const lineUnitInput = document.getElementById('inputLineUnit');
-            const suggestionsList = document.getElementById('suggestionsList');
-            lineUnitInput.addEventListener('input', function() {
-                const val = this.value.toLowerCase();
-                suggestionsList.innerHTML = '';
-                if (!val) { suggestionsList.classList.remove('active'); return; }
-                const matches = lineUnitSuggestions.filter(s => s.toLowerCase().includes(val));
-                if (!matches.length) { suggestionsList.classList.remove('active'); return; }
-                matches.forEach(s => {
-                    const div = document.createElement('div');
-                    div.className = 'suggestion-item';
-                    div.textContent = s;
-                    div.dataset.value = s;
-                    suggestionsList.appendChild(div);
-                });
-                suggestionsList.classList.add('active');
-            });
-            suggestionsList.addEventListener('click', async function(e) {
-                if (e.target.classList.contains('suggestion-item')) {
-                    const selectedLine = e.target.dataset.value;
-                    lineUnitInput.value = selectedLine;
-                    suggestionsList.classList.remove('active');
-                    console.log('Suggestion clicked:', selectedLine);
-
-                    // หาข้อมูลจากตาราง DATA
-                    try {
-                        const resp = await fetch(API_URL + '?action=getLineData&line=' + encodeURIComponent(selectedLine));
-                        const result = await resp.json();
-                        if (result.success && result.found && result.data) {
-                            autoFillFields(result.data);
-                            showToast('✅ เติมข้อมูลอัตโนมัติแล้ว', 'success');
-                        } else {
-                            showToast('⚠️ ไม่พบข้อมูลเพิ่มเติมสำหรับสายนี้', 'info');
-                        }
-                    } catch (err) {
-                        console.warn('DATA auto-fill failed:', err.message);
-                        showToast('⚠️ ไม่สามารถดึงข้อมูลได้', 'error');
-                    }
-                }
-            });
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.form-group')) suggestionsList.classList.remove('active');
-            });
 
             document.getElementById('searchInput').addEventListener('input', applyFilters);
             document.getElementById('filterStatus').addEventListener('change', applyFilters);
@@ -3589,62 +3470,197 @@
                 if (e.key === 'Escape') {
                     closeDetail();
                     closeImageModal();
-                    document.getElementById('addModal').classList.remove('active');
                 }
             });
 
             // ===== DASHBOARD VIEW EVENTS =====
-            document.getElementById('dashCardMain').addEventListener('click', function() { showView('main'); });
+            document.getElementById('dashCardWorkRecord').addEventListener('click', function() { showView('workRecord'); });
             document.getElementById('dashCardDataTable').addEventListener('click', function() { showView('dataTable'); });
-
-            // ===== ADD LINE VIEW EVENTS =====
 
             // ===== MAIN VIEW BACK BUTTON =====
             document.getElementById('mainBackBtn').addEventListener('click', function() { showView('dashboard'); });
 
             // ===== DATA TABLE VIEW EVENTS =====
             document.getElementById('dataTableSearch').addEventListener('input', filterDataTable);
+
+            // ===== WORK RECORD PAGE EVENTS =====
+            document.getElementById('workRecordBackBtn').addEventListener('click', function() { showView('dashboard'); });
+            document.getElementById('wrBtnClear').addEventListener('click', function() {
+                document.getElementById('workRecordForm').reset();
+                wrUploadedImages = [];
+                document.getElementById('wrImagePreviewGrid').innerHTML = '';
+            });
+            document.getElementById('wrBtnGps').addEventListener('click', function() {
+                if (!navigator.geolocation) { Swal.fire('ไม่รองรับ', 'เบราว์เซอร์ไม่รองรับ Geolocation', 'error'); return; }
+                const btn = this;
+                btn.textContent = '⏳...';
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        const lat = pos.coords.latitude.toFixed(6);
+                        const lng = pos.coords.longitude.toFixed(6);
+                        document.getElementById('wrCoords').value = lat + ', ' + lng;
+                        btn.textContent = '📍 GPS';
+                        showToast('📍 รับพิกัด GPS สำเร็จ', 'success');
+                    },
+                    err => { btn.textContent = '📍 GPS'; showToast('ไม่สามารถรับพิกัดได้', 'error'); },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            });
+            // Work record image upload
+            const wrUploadArea = document.getElementById('wrImageUploadArea');
+            const wrImageInput = document.getElementById('wrImageInput');
+            wrUploadArea.addEventListener('click', () => wrImageInput.click());
+            wrUploadArea.addEventListener('dragover', (e) => { e.preventDefault(); wrUploadArea.style.borderColor = 'var(--primary)'; });
+            wrUploadArea.addEventListener('dragleave', () => { wrUploadArea.style.borderColor = 'var(--gray)'; });
+            wrUploadArea.addEventListener('drop', (e) => { e.preventDefault(); wrUploadArea.style.borderColor = 'var(--gray)'; handleWrImageFiles(e.dataTransfer.files); });
+            wrImageInput.addEventListener('change', (e) => { handleWrImageFiles(e.target.files); });
+            // Work record form submit
+            document.getElementById('workRecordForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const coords = parseCoords(document.getElementById('wrCoords').value);
+                const formData = {
+                    id: uuidv4(),
+                    date: document.getElementById('wrDate').value,
+                    work_type: document.getElementById('wrWorkType').value,
+                    category: document.getElementById('wrCategory').value,
+                    line_unit: document.getElementById('wrLineUnit').value,
+                    tambon: document.getElementById('wrTambon').value,
+                    work_area: document.getElementById('wrWorkArea').value,
+                    village: document.getElementById('wrVillage').value,
+                    status: document.getElementById('wrStatus').value,
+                    priority: document.getElementById('wrPriority').value,
+                    assignee: document.getElementById('wrAssignee').value,
+                    coords: coords ? coords.lat + ', ' + coords.lng : '',
+                    lat: coords ? coords.lat : null,
+                    lng: coords ? coords.lng : null,
+                    work_detail: document.getElementById('wrWorkDetail').value,
+                    run_advice: document.getElementById('wrRunAdvice').value,
+                    note: document.getElementById('wrNote').value,
+                    images: JSON.stringify(wrUploadedImages),
+                };
+                showLoading(true);
+                try {
+                    const resp = await fetch(API_URL + '?action=addWorkRecord', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: formData })
+                    });
+                    const result = await resp.json();
+                    if (result.success) {
+                        Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ! 🎉', text: 'ข้อมูลถูกบันทึกเรียบร้อยแล้ว', confirmButtonColor: '#92C7CF', timer: 2500, timerProgressBar: true });
+                        document.getElementById('workRecordForm').reset();
+                        wrUploadedImages = [];
+                        document.getElementById('wrImagePreviewGrid').innerHTML = '';
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: result.error || 'ไม่สามารถบันทึกข้อมูลได้', confirmButtonColor: '#92C7CF' });
+                    }
+                } catch (error) {
+                    console.error('Save error:', error);
+                    Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: error.message || 'ไม่สามารถบันทึกข้อมูลได้', confirmButtonColor: '#92C7CF' });
+                }
+                showLoading(false);
+            });
         }
 
     </script>
 </p>
-<!-- FAB BUTTON (inside mainView) -->
-<!-- ADD FORM MODAL -->
-<div class="modal-overlay" id="addModal">
-<div class="modal-content" style="max-width: 650px; max-height: 90vh; border-radius: 20px;">
-<div class="modal-header">
-<h3>📝 บันทึกข้อมูลจุดรับสาย</h3>
-<button class="modal-close" id="addModalClose">✕</button></div>
-<form id="dataForm">
-<div class="form-grid">
-<div class="form-group"><label>วันที่ <span class="required">*</span></label> <input type="date" id="inputDate" required="" /></div>
-<div class="form-group"><label>หมวด</label> <input type="text" id="inputCategory" placeholder="ระบุหมวด..." /></div>
-<div class="form-group" style="position: relative;"><label>สายจดหน่วย <span class="required">*</span></label> <input type="text" id="inputLineUnit" placeholder="พิมพ์เพื่อค้นหา..." autocomplete="off" required="" />
-<div class="suggestions-list" id="suggestionsList"></div>
-</div>
-<div class="form-group"><label>ตำบล</label> <input type="text" id="inputTambon" placeholder="ระบุตำบล..." /></div>
-<div class="form-group"><label>พื้นที่ทำงาน</label> <input type="text" id="inputWorkArea" placeholder="ระบุพื้นที่ทำงาน..." /></div>
-<div class="form-group"><label>หมู่บ้าน</label> <input type="text" id="inputVillage" placeholder="ระบุหมู่บ้าน..." /></div>
-<div class="form-group full-width"><label>หมายเหตุ</label> <textarea id="inputNote" placeholder="ระบุหมายเหตุ..."></textarea></div>
-<div class="form-group"><label>STATUS</label><select id="inputStatus">
-<option value="รอดำเนินการ">⏳ รอดำเนินการ</option>
-<option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
-<option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
-</select></div>
-<div class="form-group"><label>คำแนะนำการวิ่ง</label> <input type="text" id="inputRunAdvice" placeholder="คำแนะนำ..." /></div>
-<div class="form-group full-width"><label>พิกัดต้นสาย</label>
-<div class="coord-input-group"><input type="text" id="inputCoords" placeholder="เช่น 13.7563, 100.5018" inputmode="decimal" /> <button type="button" class="coord-btn" id="btnGetLocation" title="รับพิกัดจาก GPS">📍 GPS</button></div>
-</div>
-<div class="form-group full-width"><label>📷 แนบรูปภาพ</label>
-<div class="image-upload-area" id="imageUploadArea">
-<div class="upload-icon">📸</div>
-<p>คลิกเพื่อเลือกรูป หรือลากรูปมาวาง</p>
-<input type="file" id="imageInput" accept="image/*" multiple="multiple" style="display: none;" /></div>
-<div class="image-preview-grid" id="imagePreviewGrid"></div>
-</div>
-</div>
-<div class="btn-group"><button type="submit" class="btn btn-primary">💾 บันทึก</button> <button type="button" class="btn btn-outline" id="btnClearForm">🗑️ ล้างฟอร์ม</button></div>
-</form></div>
-</div>
+	<!-- WORK RECORD PAGE (บันทึกงาน) -->
+	<div id="workRecordView" class="view-section">
+	    <div class="workrecord-view">
+	        <button class="back-btn" id="workRecordBackBtn">← กลับหน้าหลัก</button>
+	        <div class="workrecord-form-card">
+	            <h2>📝 บันทึกงาน</h2>
+	            <form id="workRecordForm">
+	                <div class="form-grid">
+	                    <div class="form-group">
+	                        <label>วันที่ <span class="required">*</span></label>
+	                        <input type="date" id="wrDate" required />
+	                    </div>
+	                    <div class="form-group">
+	                        <label>ประเภทงาน</label>
+	                        <select id="wrWorkType">
+	                            <option value="ติดตั้ง">🔧 ติดตั้ง</option>
+	                            <option value="ซ่อมบำรุง">🛠️ ซ่อมบำรุง</option>
+	                            <option value="ตรวจสอบ">🔍 ตรวจสอบ</option>
+	                            <option value="อื่นๆ">📌 อื่นๆ</option>
+	                        </select>
+	                    </div>
+	                    <div class="form-group">
+	                        <label>หมวด</label>
+	                        <input type="text" id="wrCategory" placeholder="ระบุหมวด..." />
+	                    </div>
+	                    <div class="form-group">
+	                        <label>สายจดหน่วย</label>
+	                        <input type="text" id="wrLineUnit" placeholder="ระบุสายจดหน่วย..." />
+	                    </div>
+	                    <div class="form-group">
+	                        <label>ตำบล</label>
+	                        <input type="text" id="wrTambon" placeholder="ระบุตำบล..." />
+	                    </div>
+	                    <div class="form-group">
+	                        <label>พื้นที่ทำงาน</label>
+	                        <input type="text" id="wrWorkArea" placeholder="ระบุพื้นที่ทำงาน..." />
+	                    </div>
+	                    <div class="form-group">
+	                        <label>หมู่บ้าน</label>
+	                        <input type="text" id="wrVillage" placeholder="ระบุหมู่บ้าน..." />
+	                    </div>
+	                    <div class="form-group">
+	                        <label>สถานะ</label>
+	                        <select id="wrStatus">
+	                            <option value="รอดำเนินการ">⏳ รอดำเนินการ</option>
+	                            <option value="กำลังดำเนินการ">🔄 กำลังดำเนินการ</option>
+	                            <option value="เสร็จสิ้น">✅ เสร็จสิ้น</option>
+	                        </select>
+	                    </div>
+	                    <div class="form-group">
+	                        <label>ความเร่งด่วน</label>
+	                        <select id="wrPriority">
+	                            <option value="ปกติ">🟢 ปกติ</option>
+	                            <option value="สูง">🟡 สูง</option>
+	                            <option value="เร่งด่วน">🔴 เร่งด่วน</option>
+	                        </select>
+	                    </div>
+	                    <div class="form-group">
+	                        <label>ผู้รับผิดชอบ</label>
+	                        <input type="text" id="wrAssignee" placeholder="ชื่อผู้รับผิดชอบ..." />
+	                    </div>
+	                    <div class="form-group full-width">
+	                        <label>พิกัด</label>
+	                        <div class="coord-input-group">
+	                            <input type="text" id="wrCoords" placeholder="เช่น 13.7563, 100.5018" inputmode="decimal" />
+	                            <button type="button" class="coord-btn" id="wrBtnGps" title="รับพิกัดจาก GPS">📍 GPS</button>
+	                        </div>
+	                    </div>
+	                    <div class="form-group full-width">
+	                        <label>รายละเอียดงาน</label>
+	                        <textarea id="wrWorkDetail" placeholder="อธิบายรายละเอียดงานที่ทำ..."></textarea>
+	                    </div>
+	                    <div class="form-group full-width">
+	                        <label>คำแนะนำการวิ่ง</label>
+	                        <input type="text" id="wrRunAdvice" placeholder="คำแนะนำ..." />
+	                    </div>
+	                    <div class="form-group full-width">
+	                        <label>หมายเหตุ</label>
+	                        <textarea id="wrNote" placeholder="ระบุหมายเหตุ..."></textarea>
+	                    </div>
+	                    <div class="form-group full-width">
+	                        <label>📷 แนบรูปภาพ</label>
+	                        <div class="image-upload-area" id="wrImageUploadArea">
+	                            <div class="upload-icon">📸</div>
+	                            <p>คลิกเพื่อเลือกรูป หรือลากรูปมาวาง</p>
+	                            <input type="file" id="wrImageInput" accept="image/*" multiple style="display:none" />
+	                        </div>
+	                        <div class="image-preview-grid" id="wrImagePreviewGrid"></div>
+	                    </div>
+	                    <div class="btn-group">
+	                        <button type="submit" class="btn btn-primary">💾 บันทึก</button>
+	                        <button type="button" class="btn btn-outline" id="wrBtnClear">🗑️ ล้างฟอร์ม</button>
+	                    </div>
+	                </div>
+	            </form>
+	        </div>
+	    </div>
+	</div>
 </body>
 </html>
